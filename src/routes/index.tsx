@@ -28,7 +28,7 @@ function Index() {
     Object.fromEntries(PARAMS.map((p) => [p.key, p.defaultValue])),
   );
   const res = score(values);
-  const issues = PARAMS.filter((p) => evaluate(p, values[p.key]) !== "ok");
+  const issues = PARAMS.filter((p) => evaluate(p, values[p.key] ?? 0) !== "ok");
   const tone: Status = res.critical || res.pct < 50 ? "bad" : res.pct < 90 ? "warn" : "ok";
 
   return (
@@ -48,7 +48,7 @@ function Index() {
           <h2 className="mb-4 font-display text-2xl">Paramètres de traitement</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {PARAMS.map((p) => {
-              const s = evaluate(p, values[p.key]);
+              const s = evaluate(p, values[p.key] ?? 0);
               const norm = p.min !== undefined ? `${p.min} – ${p.max}` : `≤ ${p.max}`;
               return (
                 <div key={p.key} className="rounded-xl border bg-card p-4 shadow-sm">
@@ -95,7 +95,7 @@ function Index() {
             ) : (
               <ul className="mt-3 space-y-3">
                 {issues.map((p) => {
-                  const s = evaluate(p, values[p.key]);
+                  const s = evaluate(p, values[p.key] ?? 0);
                   return (
                     <li key={p.key} className={`rounded-lg border p-3 text-sm ${cls[s]}`}>
                       <div className="font-semibold">{p.name} : {values[p.key]} {p.unit}</div>
