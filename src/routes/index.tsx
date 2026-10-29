@@ -35,7 +35,7 @@ function Index() {
     <main className="min-h-screen bg-background">
       <header className="bg-hero text-primary-foreground">
         <div className="mx-auto max-w-6xl px-6 py-12">
-          <p className="text-sm uppercase tracking-widest opacity-80">Laboratoire de l'eau</p>
+          <p className="text-sm uppercase tracking-widest opacity-80">LABORATOIRE DE L'EAU - ENTREPRISE SANDANDRANO</p>
           <h1 className="mt-2 font-display text-4xl md:text-5xl">AquaAnalyse</h1>
           <p className="mt-3 max-w-xl opacity-90">
             Saisissez vos mesures : l'application évalue la qualité selon les normes OMS et propose les traitements adéquats.
