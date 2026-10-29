@@ -5,9 +5,9 @@ import { PARAMS, evaluate, score, type Status } from "@/lib/water";
 export const Route = createFileRoute("/analyse")({
   head: () => ({
     meta: [
-      { title: "AquaAnalyse — Traitement et qualité de l'eau" },
+      { title: "Vérification des paramètres de l'eau — AquaAnalyse" },
       { name: "description", content: "Saisissez les paramètres de l'eau et obtenez une analyse de qualité et des traitements recommandés." },
-      { property: "og:title", content: "AquaAnalyse — Traitement et qualité de l'eau" },
+      { property: "og:title", content: "Vérification des paramètres de l'eau — AquaAnalyse" },
       { property: "og:description", content: "Analyse des paramètres physico-chimiques et bactériologiques de l'eau." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
