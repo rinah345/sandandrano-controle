@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { PARAMS, evaluate, score, type Status } from "@/lib/water";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/analyse")({
   head: () => ({
     meta: [
       { title: "AquaAnalyse — Traitement et qualité de l'eau" },
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: Index,
+  component: Analyse,
 });
 
 const label: Record<Status, string> = { ok: "Conforme", warn: "Limite", bad: "Non conforme" };
@@ -23,7 +23,7 @@ const cls: Record<Status, string> = {
   bad: "bg-destructive/15 text-destructive border-destructive/40",
 };
 
-function Index() {
+function Analyse() {
   const [values, setValues] = useState<Record<string, number>>(
     Object.fromEntries(PARAMS.map((p) => [p.key, p.defaultValue])),
   );
@@ -33,7 +33,7 @@ function Index() {
 
   return (
     <main className="min-h-screen bg-background">
-      <header className="bg-hero text-primary-foreground">
+      <header className="bg-hero text-primary-foreground print:hidden">
         <div className="mx-auto max-w-6xl px-6 py-12">
           <p className="text-sm uppercase tracking-widest opacity-80">LABORATOIRE DE L'EAU - ENTREPRISE SANDANDRANO</p>
           <h1 className="mt-2 font-display text-4xl md:text-5xl">AquaAnalyse</h1>
