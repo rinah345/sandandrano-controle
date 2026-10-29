@@ -9,38 +9,140 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalyseRouteImport } from './routes/analyse'
+import { Route as ChloreRouteImport } from './routes/chlore'
+import { Route as DilutionRouteImport } from './routes/dilution'
+import { Route as HistoriqueRouteImport } from './routes/historique'
+import { Route as ManuelRouteImport } from './routes/manuel'
+import { Route as StockRouteImport } from './routes/stock'
+import { Route as SulfateRouteImport } from './routes/sulfate'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AnalyseRoute = AnalyseRouteImport.update({
   id: '/analyse',
   path: '/analyse',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChloreRoute = ChloreRouteImport.update({
+  id: '/chlore',
+  path: '/chlore',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DilutionRoute = DilutionRouteImport.update({
+  id: '/dilution',
+  path: '/dilution',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoriqueRoute = HistoriqueRouteImport.update({
+  id: '/historique',
+  path: '/historique',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManuelRoute = ManuelRouteImport.update({
+  id: '/manuel',
+  path: '/manuel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StockRoute = StockRouteImport.update({
+  id: '/stock',
+  path: '/stock',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SulfateRoute = SulfateRouteImport.update({
+  id: '/sulfate',
+  path: '/sulfate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/analyse': typeof AnalyseRoute
+  '/chlore': typeof ChloreRoute
+  '/dilution': typeof DilutionRoute
+  '/historique': typeof HistoriqueRoute
+  '/manuel': typeof ManuelRoute
+  '/stock': typeof StockRoute
+  '/sulfate': typeof SulfateRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/analyse': typeof AnalyseRoute
+  '/chlore': typeof ChloreRoute
+  '/dilution': typeof DilutionRoute
+  '/historique': typeof HistoriqueRoute
+  '/manuel': typeof ManuelRoute
+  '/stock': typeof StockRoute
+  '/sulfate': typeof SulfateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/analyse': typeof AnalyseRoute
+  '/chlore': typeof ChloreRoute
+  '/dilution': typeof DilutionRoute
+  '/historique': typeof HistoriqueRoute
+  '/manuel': typeof ManuelRoute
+  '/stock': typeof StockRoute
+  '/sulfate': typeof SulfateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/analyse'
+  fullPaths:
+    | '/'
+    | '/analyse'
+    | '/chlore'
+    | '/dilution'
+    | '/historique'
+    | '/manuel'
+    | '/stock'
+    | '/sulfate'
   fileRoutesByTo: FileRoutesByTo
-  to: '/analyse'
-  id: '__root__' | '/analyse'
+  to:
+    | '/'
+    | '/analyse'
+    | '/chlore'
+    | '/dilution'
+    | '/historique'
+    | '/manuel'
+    | '/stock'
+    | '/sulfate'
+  id:
+    | '__root__'
+    | '/'
+    | '/analyse'
+    | '/chlore'
+    | '/dilution'
+    | '/historique'
+    | '/manuel'
+    | '/stock'
+    | '/sulfate'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AnalyseRoute: typeof AnalyseRoute
+  ChloreRoute: typeof ChloreRoute
+  DilutionRoute: typeof DilutionRoute
+  HistoriqueRoute: typeof HistoriqueRoute
+  ManuelRoute: typeof ManuelRoute
+  StockRoute: typeof StockRoute
+  SulfateRoute: typeof SulfateRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/analyse': {
       id: '/analyse'
       path: '/analyse'
@@ -48,11 +150,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnalyseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chlore': {
+      id: '/chlore'
+      path: '/chlore'
+      fullPath: '/chlore'
+      preLoaderRoute: typeof ChloreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dilution': {
+      id: '/dilution'
+      path: '/dilution'
+      fullPath: '/dilution'
+      preLoaderRoute: typeof DilutionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/historique': {
+      id: '/historique'
+      path: '/historique'
+      fullPath: '/historique'
+      preLoaderRoute: typeof HistoriqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manuel': {
+      id: '/manuel'
+      path: '/manuel'
+      fullPath: '/manuel'
+      preLoaderRoute: typeof ManuelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stock': {
+      id: '/stock'
+      path: '/stock'
+      fullPath: '/stock'
+      preLoaderRoute: typeof StockRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sulfate': {
+      id: '/sulfate'
+      path: '/sulfate'
+      fullPath: '/sulfate'
+      preLoaderRoute: typeof SulfateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AnalyseRoute: AnalyseRoute,
+  ChloreRoute: ChloreRoute,
+  DilutionRoute: DilutionRoute,
+  HistoriqueRoute: HistoriqueRoute,
+  ManuelRoute: ManuelRoute,
+  StockRoute: StockRoute,
+  SulfateRoute: SulfateRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
