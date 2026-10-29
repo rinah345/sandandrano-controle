@@ -1,113 +1,63 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { PARAMS, evaluate, score, type Status } from "@/lib/water";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { pageHead } from "@/lib/head";
+import { loadHistory, type Entry } from "@/lib/history";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "AquaAnalyse — Traitement et qualité de l'eau" },
-      { name: "description", content: "Saisissez les paramètres de l'eau et obtenez une analyse de qualité et des traitements recommandés." },
-      { property: "og:title", content: "AquaAnalyse — Traitement et qualité de l'eau" },
-      { property: "og:description", content: "Analyse des paramètres physico-chimiques et bactériologiques de l'eau." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
-  component: Index,
+  head: () => pageHead("Tableau de bord", "Calcul des dosages chimiques en traitement de l'eau potable : chlore, sulfate d'aluminium, dilution, stock et manuel technique."),
+  component: Dashboard,
 });
 
-const label: Record<Status, string> = { ok: "Conforme", warn: "Limite", bad: "Non conforme" };
-const cls: Record<Status, string> = {
-  ok: "bg-ok/15 text-ok border-ok/40",
-  warn: "bg-warn/15 text-warn border-warn/40",
-  bad: "bg-destructive/15 text-destructive border-destructive/40",
-};
+const modules = [
+  { to: "/chlore", n: "01", t: "Dosage du chlore", d: "Débit d'injection, volume par lot, autonomie, contrôle de la pompe." },
+  { to: "/sulfate", n: "02", t: "Sulfate d'aluminium", d: "Coagulant : injection, masse de produit, préparation de cuve." },
+  { to: "/dilution", n: "03", t: "Préparation & dilution", d: "Solutions mères, C1V1 = C2V2, produit commercial vs actif." },
+  { to: "/stock", n: "04", t: "Consommation & stock", d: "Autonomie, quantité à commander, coûts, prévisions." },
+  { to: "/analyse", n: "05", t: "Vérification des paramètres", d: "Qualité de l'eau selon les valeurs guides OMS." },
+  { to: "/historique", n: "06", t: "Historique & rapports", d: "Calculs enregistrés, export Excel, sauvegarde." },
+  { to: "/manuel", n: "07", t: "Manuel technique", d: "Formules, définitions, exemples et recommandations." },
+] as const;
 
-function Index() {
-  const [values, setValues] = useState<Record<string, number>>(
-    Object.fromEntries(PARAMS.map((p) => [p.key, p.defaultValue])),
-  );
-  const res = score(values);
-  const issues = PARAMS.filter((p) => evaluate(p, values[p.key] ?? 0) !== "ok");
-  const tone: Status = res.critical || res.pct < 50 ? "bad" : res.pct < 90 ? "warn" : "ok";
-
+function Dashboard() {
+  const [hist, setHist] = useState<Entry[]>([]);
+  useEffect(() => setHist(loadHistory()), []);
   return (
-    <main className="min-h-screen bg-background">
-      <header className="bg-hero text-primary-foreground">
+    <div>
+      <section className="bg-hero text-primary-foreground">
         <div className="mx-auto max-w-6xl px-6 py-12">
           <p className="text-sm uppercase tracking-widest opacity-80">LABORATOIRE DE L'EAU - ENTREPRISE SANDANDRANO</p>
-          <h1 className="mt-2 font-display text-4xl md:text-5xl">AquaAnalyse</h1>
-          <p className="mt-3 max-w-xl opacity-90">
-            Saisissez vos mesures : l'application évalue la qualité selon les normes OMS et propose les traitements adéquats.
+          <h1 className="mt-2 font-display text-4xl md:text-5xl">Manuel numérique de dosage</h1>
+          <p className="mt-3 max-w-2xl opacity-90">
+            Calculez, vérifiez et optimisez les dosages de chlore et de sulfate d'aluminium. Chaque résultat affiche ses formules, ses conversions d'unités et ses contrôles de cohérence.
           </p>
+          <Link to="/chlore" className="mt-6 inline-block rounded-md bg-background px-5 py-2.5 font-semibold text-foreground hover:bg-background/90">Calculer un dosage de chlore</Link>
         </div>
-      </header>
-
-      <div className="mx-auto grid max-w-6xl gap-8 px-6 py-10 lg:grid-cols-[1fr_360px]">
-        <section>
-          <h2 className="mb-4 font-display text-2xl">Paramètres de traitement</h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {PARAMS.map((p) => {
-              const s = evaluate(p, values[p.key] ?? 0);
-              const norm = p.min !== undefined ? `${p.min} – ${p.max}` : `≤ ${p.max}`;
-              return (
-                <div key={p.key} className="rounded-xl border bg-card p-4 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{p.name}</span>
-                    <span className={`rounded-full border px-2 py-0.5 text-xs ${cls[s]}`}>{label[s]}</span>
-                  </div>
-                  <div className="mt-3 flex items-center gap-2">
-                    <input
-                      type="number"
-                      step="any"
-                      value={values[p.key]}
-                      onChange={(e) => setValues({ ...values, [p.key]: parseFloat(e.target.value) || 0 })}
-                      className="w-full rounded-md border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                    <span className="w-24 text-sm text-muted-foreground">{p.unit}</span>
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">Norme : {norm} {p.unit}</p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-          <div className="rounded-xl border bg-card p-6 shadow-sm">
-            <h2 className="font-display text-xl">Qualité de l'eau</h2>
-            <div className={`mt-4 rounded-lg border p-4 text-center ${cls[tone]}`}>
-              <div className="text-5xl font-bold">{res.pct}%</div>
-              <div className="mt-1 text-lg font-semibold">{res.quality}</div>
-            </div>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
-              <div className="h-full bg-primary transition-all" style={{ width: `${res.pct}%` }} />
-            </div>
-            <p className="mt-3 text-sm text-muted-foreground">
-              {PARAMS.length - issues.length} / {PARAMS.length} paramètres conformes
-            </p>
-          </div>
-
-          <div className="rounded-xl border bg-card p-6 shadow-sm">
-            <h2 className="font-display text-xl">Analyse & traitements</h2>
-            {issues.length === 0 ? (
-              <p className="mt-3 text-sm text-ok">Tous les paramètres sont conformes. Maintenir la désinfection et le suivi.</p>
-            ) : (
-              <ul className="mt-3 space-y-3">
-                {issues.map((p) => {
-                  const s = evaluate(p, values[p.key] ?? 0);
-                  return (
-                    <li key={p.key} className={`rounded-lg border p-3 text-sm ${cls[s]}`}>
-                      <div className="font-semibold">{p.name} : {values[p.key]} {p.unit}</div>
-                      <div className="mt-1 text-foreground/80">{p.advice}</div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        </aside>
+      </section>
+      <div className="mx-auto max-w-6xl px-6 py-10">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {modules.map((m) => (
+            <Link key={m.to} to={m.to} className="group rounded-xl border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50">
+              <span className="font-display text-2xl text-primary/60">{m.n}</span>
+              <h2 className="mt-1 text-lg font-semibold group-hover:text-primary">{m.t}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{m.d}</p>
+            </Link>
+          ))}
+        </div>
+        <div className="mt-10 rounded-xl border bg-card p-5">
+          <h2 className="font-display text-xl">Derniers calculs</h2>
+          {hist.length === 0 ? <p className="mt-2 text-sm text-muted-foreground">Aucun calcul enregistré pour l'instant.</p> : (
+            <ul className="mt-3 divide-y text-sm">
+              {hist.slice(0, 5).map((e) => (
+                <li key={e.id} className="flex justify-between gap-4 py-2">
+                  <span>{e.sheet.title}</span>
+                  <span className="text-right text-muted-foreground">{e.sheet.main?.value} · {new Date(e.date).toLocaleDateString("fr-FR")}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <p className="mt-6 text-xs text-muted-foreground">Les résultats sont théoriques et ne garantissent pas la potabilité : confrontez-les aux mesures de terrain, aux essais (jar-test) et aux exigences sanitaires applicables.</p>
       </div>
-    </main>
+    </div>
   );
 }
