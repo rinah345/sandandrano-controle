@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalyseRouteImport } from './routes/analyse'
 import { Route as ChloreRouteImport } from './routes/chlore'
 import { Route as DilutionRouteImport } from './routes/dilution'
+import { Route as DimensionnementRouteImport } from './routes/dimensionnement'
 import { Route as HistoriqueRouteImport } from './routes/historique'
 import { Route as ManuelRouteImport } from './routes/manuel'
 import { Route as StockRouteImport } from './routes/stock'
@@ -36,6 +37,11 @@ const ChloreRoute = ChloreRouteImport.update({
 const DilutionRoute = DilutionRouteImport.update({
   id: '/dilution',
   path: '/dilution',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DimensionnementRoute = DimensionnementRouteImport.update({
+  id: '/dimensionnement',
+  path: '/dimensionnement',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HistoriqueRoute = HistoriqueRouteImport.update({
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/analyse': typeof AnalyseRoute
   '/chlore': typeof ChloreRoute
   '/dilution': typeof DilutionRoute
+  '/dimensionnement': typeof DimensionnementRoute
   '/historique': typeof HistoriqueRoute
   '/manuel': typeof ManuelRoute
   '/stock': typeof StockRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/analyse': typeof AnalyseRoute
   '/chlore': typeof ChloreRoute
   '/dilution': typeof DilutionRoute
+  '/dimensionnement': typeof DimensionnementRoute
   '/historique': typeof HistoriqueRoute
   '/manuel': typeof ManuelRoute
   '/stock': typeof StockRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/analyse': typeof AnalyseRoute
   '/chlore': typeof ChloreRoute
   '/dilution': typeof DilutionRoute
+  '/dimensionnement': typeof DimensionnementRoute
   '/historique': typeof HistoriqueRoute
   '/manuel': typeof ManuelRoute
   '/stock': typeof StockRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/analyse'
     | '/chlore'
     | '/dilution'
+    | '/dimensionnement'
     | '/historique'
     | '/manuel'
     | '/stock'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/analyse'
     | '/chlore'
     | '/dilution'
+    | '/dimensionnement'
     | '/historique'
     | '/manuel'
     | '/stock'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/analyse'
     | '/chlore'
     | '/dilution'
+    | '/dimensionnement'
     | '/historique'
     | '/manuel'
     | '/stock'
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   AnalyseRoute: typeof AnalyseRoute
   ChloreRoute: typeof ChloreRoute
   DilutionRoute: typeof DilutionRoute
+  DimensionnementRoute: typeof DimensionnementRoute
   HistoriqueRoute: typeof HistoriqueRoute
   ManuelRoute: typeof ManuelRoute
   StockRoute: typeof StockRoute
@@ -162,6 +175,13 @@ declare module '@tanstack/react-router' {
       path: '/dilution'
       fullPath: '/dilution'
       preLoaderRoute: typeof DilutionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dimensionnement': {
+      id: '/dimensionnement'
+      path: '/dimensionnement'
+      fullPath: '/dimensionnement'
+      preLoaderRoute: typeof DimensionnementRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/historique': {
@@ -200,6 +220,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyseRoute: AnalyseRoute,
   ChloreRoute: ChloreRoute,
   DilutionRoute: DilutionRoute,
+  DimensionnementRoute: DimensionnementRoute,
   HistoriqueRoute: HistoriqueRoute,
   ManuelRoute: ManuelRoute,
   StockRoute: StockRoute,
