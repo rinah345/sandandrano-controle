@@ -13,9 +13,10 @@ const modules = [
   { to: "/sulfate", n: "02", t: "Sulfate d'aluminium", d: "Coagulant : injection, masse de produit, préparation de cuve." },
   { to: "/dilution", n: "03", t: "Préparation & dilution", d: "Solutions mères, C1V1 = C2V2, produit commercial vs actif." },
   { to: "/stock", n: "04", t: "Consommation & stock", d: "Autonomie, quantité à commander, coûts, prévisions." },
-  { to: "/analyse", n: "05", t: "Vérification des paramètres", d: "Qualité de l'eau selon les valeurs guides OMS." },
-  { to: "/historique", n: "06", t: "Historique & rapports", d: "Calculs enregistrés, export Excel, sauvegarde." },
-  { to: "/manuel", n: "07", t: "Manuel technique", d: "Formules, définitions, exemples et recommandations." },
+  { to: "/dimensionnement", n: "05", t: "Dimensionnement des ouvrages", d: "Décanteur, filtre, bassin de contact : volume, surface, hauteur." },
+  { to: "/analyse", n: "06", t: "Vérification des paramètres", d: "Qualité de l'eau selon les valeurs guides OMS." },
+  { to: "/historique", n: "07", t: "Historique & rapports", d: "Calculs enregistrés, export Excel, sauvegarde." },
+  { to: "/manuel", n: "08", t: "Manuel technique", d: "Formules, définitions, exemples et recommandations." },
 ] as const;
 
 function Dashboard() {
