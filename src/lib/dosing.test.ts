@@ -83,3 +83,19 @@ describe("préparation, dilution, stock", () => {
     expect(find(s.results, "Quantité à commander")).toBe("400 kg");
   });
 });
+
+import { computeSizing } from "./dosing";
+describe("dimensionnement", () => {
+  it("décanteur 100 m³/h, 2 h, Vh 1 m/h → 200 m³, 100 m², 2 m", () => {
+    const s = computeSizing({ type: "decanteur", Q: q(100, "m³/h"), t: q(2, "h"), vh: 1 });
+    expect(s.steps.map((x) => x.result)).toEqual(["200 m³", "100 m²", "2 m"]);
+  });
+  it("contact : volume 50 m³ à 25 m³/h → 120 min", () => {
+    const s = computeSizing({ type: "contact", Q: q(25, "m³/h"), V: q(50, "m³") });
+    expect(s.main!.value).toBe("120 min");
+  });
+  it("filtre sans vitesse refusé", () => {
+    const s = computeSizing({ type: "filtre", Q: q(10, "L/s"), t: q(10, "min"), vh: null });
+    expect(s.main).toBeUndefined();
+  });
+});
