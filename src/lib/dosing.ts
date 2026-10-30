@@ -332,3 +332,62 @@ export function computeStock(inp: { product: string; unit: string; rate: Q; init
 }
 
 export const FACTORS = { CONC, FLOW, INJ, VOL, MASS, TIME, fromBase };
+
+/** Dimensionnement décanteur / filtre / bassin de contact.
+ *  V = Q × t ; S = Q / Vh (charge superficielle) ; H = V / S. Q en m³/h, t en h, Vh en m/h. */
+export function computeSizing(inp: { type: "decanteur" | "filtre" | "contact"; Q: Q; t?: Q; V?: Q; vh?: number | null; n?: number | null }): Sheet {
+  const label = { decanteur: "décanteur", filtre: "filtre", contact: "bassin de contact" }[inp.type];
+  const s = emptySheet("dimensionnement", `Dimensionnement — ${label}`);
+  let ok = req(s, inp.Q, "Débit d'eau");
+  const hasT = opt(s, inp.t, "Temps de contact / séjour");
+  const hasV = opt(s, inp.V, "Volume existant");
+  if (!hasT && !hasV) { s.checks.push({ level: "error", msg: "Renseignez le temps de contact (pour calculer le volume) ou un volume existant (pour calculer le temps de séjour)." }); ok = false; }
+  const vh = inp.vh ?? null;
+  if (inp.type !== "contact" && (vh === null || Number.isNaN(vh) || vh <= 0)) { s.checks.push({ level: "error", msg: `Vitesse ${inp.type === "filtre" ? "de filtration" : "ascensionnelle (charge superficielle)"} obligatoire et > 0, en m/h.` }); ok = false; }
+  const n = inp.n && inp.n > 0 ? Math.round(inp.n) : 1;
+  if (!ok) return s;
+  const Qm3h = base(inp.Q, FLOW) * 3.6;
+  s.inputs.push({ label: "Ouvrage", value: label }, { label: "Débit Q", value: show(inp.Q) });
+  s.conversions.push({ label: "Q", value: `${show(inp.Q)} → ${fmt(Qm3h)} m³/h` });
+  let V: number;
+  if (hasT) {
+    const th = base(inp.t!, TIME);
+    s.inputs.push({ label: "Temps de séjour t", value: show(inp.t!) });
+    s.conversions.push({ label: "t", value: `${fmt(th)} h` });
+    V = Qm3h * th;
+    s.steps.push({ label: "Volume utile", formula: "V = Q × t", substitution: `${fmt(Qm3h)} m³/h × ${fmt(th)} h`, result: `${fmt(V)} m³` });
+    if (hasV) {
+      const Vex = base(inp.V!, VOL) / 1000;
+      const tex = Vex / Qm3h;
+      s.results.push({ label: "Temps de séjour de l'ouvrage existant", value: `${fmt(tex)} h (${fmt(tex * 60)} min)` });
+      if (Vex < V) s.checks.push({ level: "warn", msg: `L'ouvrage existant (${fmt(Vex)} m³) est inférieur au volume requis (${fmt(V)} m³).` });
+    }
+  } else {
+    V = base(inp.V!, VOL) / 1000;
+    s.inputs.push({ label: "Volume existant", value: show(inp.V!) });
+    const th = V / Qm3h;
+    s.steps.push({ label: "Temps de séjour", formula: "t = V / Q", substitution: `${fmt(V)} m³ / ${fmt(Qm3h)} m³/h`, result: `${fmt(th)} h = ${fmt(th * 60)} min` });
+  }
+  s.main = { label: hasT ? "Volume utile requis" : "Temps de séjour", value: hasT ? `${fmt(V)} m³` : `${fmt((V / Qm3h) * 60)} min` };
+  s.results.push({ label: "Volume utile total", value: `${fmt(V)} m³` });
+  if (inp.type !== "contact") {
+    const S = Qm3h / vh!;
+    s.steps.push({ label: "Surface totale", formula: inp.type === "filtre" ? "S = Q / v_f" : "S = Q / V_h", substitution: `${fmt(Qm3h)} / ${fmt(vh!)}`, result: `${fmt(S)} m²` });
+    const H = V / S;
+    s.steps.push({ label: "Hauteur utile", formula: "H = V / S", substitution: `${fmt(V)} / ${fmt(S)}`, result: `${fmt(H)} m` });
+    s.results.push({ label: "Surface totale", value: `${fmt(S)} m²` }, { label: "Hauteur utile", value: `${fmt(H)} m` });
+    if (n > 1) s.results.push({ label: `Surface par unité (${n} unités)`, value: `${fmt(S / n)} m²` });
+    const Su = S / n;
+    s.results.push({ label: "Côté si carré (par unité)", value: `${fmt(Math.sqrt(Su), 4)} m` }, { label: "Diamètre si circulaire (par unité)", value: `${fmt(Math.sqrt((4 * Su) / Math.PI), 4)} m` });
+    if (inp.type === "filtre") {
+      s.limits.push("Pour un filtre, la vitesse de filtration fixe la surface ; le temps de contact concerne le lit filtrant. Prévoir une unité de réserve pour le lavage (calcul à N−1 unités).");
+      if (n > 1) s.results.push({ label: `Vitesse avec 1 filtre en lavage`, value: `${fmt(Qm3h / (Su * (n - 1)))} m/h` });
+    } else s.limits.push("La vitesse ascensionnelle dépend du type de décanteur (statique, lamellaire, à lit de boues) et de la qualité de la floculation : à valider par essais.");
+    s.hypotheses.push("Charge superficielle exprimée en m³/m²/h = m/h.");
+  } else s.limits.push("Pour la désinfection, vérifier le produit C × t (résiduel × temps de contact) et l'efficacité hydraulique du bassin (chicanes).");
+  s.hypotheses.push("Débit constant ; volume utile hors revanche et zone de boues.");
+  s.interpretation.push(`Pour ${fmt(Qm3h)} m³/h, le ${label} doit offrir un volume utile de ${fmt(V)} m³.`);
+  s.limits.push("Valeurs de conception théoriques ; ne pas présenter comme une valeur réglementaire. Confronter aux normes et retours d'exploitation.");
+  s.checks.push({ level: "ok", msg: "Données cohérentes, unités converties." });
+  return s;
+}

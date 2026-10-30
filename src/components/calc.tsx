@@ -4,7 +4,7 @@ import type { Check, Sheet } from "@/lib/dosing";
 import { addEntry, downloadCSV, sheetToRows } from "@/lib/history";
 
 export function Field({ label, value, onChange, unit, units, onUnit, hint, optional }: {
-  label: string; value: string; onChange: (v: string) => void; unit?: string; units?: string[]; onUnit?: (u: string) => void; hint?: string; optional?: boolean;
+  label: string; value: string; onChange: (v: string) => void; unit?: string | undefined; units?: string[] | undefined; onUnit?: ((u: string) => void) | undefined; hint?: string | undefined; optional?: boolean | undefined;
 }) {
   return (
     <label className="block">

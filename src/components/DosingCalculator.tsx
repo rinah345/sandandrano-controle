@@ -5,25 +5,26 @@ import { Actions, Card, Field, SheetView } from "./calc";
 
 const K = (t: Record<string, number>) => Object.keys(t);
 type F = { v: string; u: string };
+type Key = keyof ReturnType<typeof initial>;
 
 function initial(kind: "chlore" | "sulfate") {
   return {
     Cm: { v: "", u: kind === "chlore" ? "mg/L" : "g/L" }, D: { v: "", u: "mg/L" }, Qe: { v: "", u: "L/s" }, Ve: { v: "", u: "m³" },
     stock: { v: "", u: "L" }, t: { v: "", u: "h" }, pump: { v: "", u: "mL/s" }, residual: { v: "", u: "mg/L" }, demand: { v: "", u: "mg/L" },
     productMass: { v: "", u: "kg" }, tankV: { v: "", u: "L" }, tankC: { v: "", u: "% (m/v)" }, purity: { v: "", u: "%" },
-  } as Record<string, F>;
+  } satisfies Record<string, F>;
 }
 
 export function DosingCalculator({ kind }: { kind: "chlore" | "sulfate" }) {
   const [mode, setMode] = useState<"continu" | "lot">("continu");
   const [f, setF] = useState(initial(kind));
   const [sheet, setSheet] = useState<Sheet | null>(null);
-  const bind = (k: string, units?: string[]) => ({
+  const bind = (k: Key, units?: string[]) => ({
     value: f[k].v, unit: f[k].u, units,
     onChange: (v: string) => setF({ ...f, [k]: { ...f[k], v } }),
     onUnit: (u: string) => setF({ ...f, [k]: { ...f[k], u } }),
   });
-  const q = (k: string): Q => ({ v: parseNum(f[k].v), u: f[k].u });
+  const q = (k: Key): Q => ({ v: parseNum(f[k].v), u: f[k].u });
 
   const calc = () => {
     setSheet(computeDosing(kind, {
