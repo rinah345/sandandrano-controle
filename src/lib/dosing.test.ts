@@ -28,18 +28,18 @@ describe("chlore — exemple de référence", () => {
   it("3,5 L/s, 40 000 mg/L, 30 mg/L → 2,625 mL/s ; 9,45 L/h ; 226,8 L/24 h", () => {
     const s = computeDosing("chlore", { mode: "continu", Cm: q(40000, "mg/L"), D: q(30, "mg/L"), Qe: q(3.5, "L/s"), t: q(24, "h") });
     expect(s.checks.some((c) => c.level === "error")).toBe(false);
-    expect(s.steps[0].result).toBe("0,002625 L/s");
-    expect(s.steps[1].result).toBe("2,625 mL/s");
-    expect(s.steps[2].result).toBe("9,45 L/h");
+    expect(s.steps[0]!.result).toBe("0,002625 L/s");
+    expect(s.steps[1]!.result).toBe("2,625 mL/s");
+    expect(s.steps[2]!.result).toBe("9,45 L/h");
     expect(find(s.results, "Volume consommé")).toBe("226,8 L");
   });
   it("même résultat avec unités différentes (4 %, 12,6 m³/h)", () => {
     const s = computeDosing("chlore", { mode: "continu", Cm: q(4, "% (m/v)"), D: q(30, "g/m³"), Qe: q(12.6, "m³/h") });
-    expect(s.steps[1].result).toBe("2,625 mL/s");
+    expect(s.steps[1]!.result).toBe("2,625 mL/s");
   });
   it("lot : 10 m³ à 2 mg/L avec 40 g/L → 0,5 L", () => {
     const s = computeDosing("chlore", { mode: "lot", Cm: q(40, "g/L"), D: q(2, "mg/L"), Ve: q(10, "m³") });
-    expect(s.steps[0].result).toBe("0,5 L");
+    expect(s.steps[0]!.result).toBe("0,5 L");
   });
   it("refuse une concentration nulle et un débit négatif", () => {
     const s = computeDosing("chlore", { mode: "continu", Cm: q(0, "mg/L"), D: q(2, "mg/L"), Qe: q(-1, "L/s") });
@@ -55,11 +55,11 @@ describe("chlore — exemple de référence", () => {
 describe("sulfate d'aluminium", () => {
   it("continu : 100 m³/h, 30 mg/L, solution 100 g/L → 30 L/h", () => {
     const s = computeDosing("sulfate", { mode: "continu", Cm: q(100, "g/L"), D: q(30, "mg/L"), Qe: q(100, "m³/h") });
-    expect(s.steps[2].result).toBe("30 L/h");
+    expect(s.steps[2]!.result).toBe("30 L/h");
   });
   it("masse : 1000 m³ à 40 mg/L → 40 kg actif", () => {
     const s = computeDosing("sulfate", { mode: "lot", Cm: q(100, "g/L"), D: q(40, "mg/L"), Ve: q(1000, "m³") });
-    expect(s.steps[1].result).toContain("= 40 kg");
+    expect(s.steps[1]!.result).toContain("= 40 kg");
   });
   it("cuve 1 m³ à 10 % avec produit à 80 % → 125 kg", () => {
     const s = computeDosing("sulfate", { mode: "lot", Cm: q(100, "g/L"), D: q(40, "mg/L"), Ve: q(1000, "m³"), tankV: q(1, "m³"), tankC: q(10, "% (m/v)"), purity: 80 });
@@ -70,11 +70,11 @@ describe("sulfate d'aluminium", () => {
 describe("préparation, dilution, stock", () => {
   it("préparation 500 L à 50 g/L, produit à 70 % → 35,7143 kg", () => {
     const s = computePreparation({ C: q(50, "g/L"), V: q(500, "L"), purity: 70 });
-    expect(s.steps[1].result).toBe("35,7143 kg");
+    expect(s.steps[1]!.result).toBe("35,7143 kg");
   });
   it("dilution 12 % → 1 % pour 120 L : V1 = 10 L", () => {
     const s = computeDilution({ C1: q(12, "% (m/v)"), C2: q(1, "% (m/v)"), V2: q(120, "L") });
-    expect(s.steps[0].result).toBe("10 L");
+    expect(s.steps[0]!.result).toBe("10 L");
     expect(finalConcentration(120000, 10, 120)).toBe(10000);
   });
   it("stock : 500 kg, 25 kg/jour, 100 consommés → 16 jours ; commande 30 j + 50 = 400 kg", () => {
