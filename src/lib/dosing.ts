@@ -391,3 +391,142 @@ export function computeSizing(inp: { type: "decanteur" | "filtre" | "contact"; Q
   s.checks.push({ level: "ok", msg: "Données cohérentes, unités converties." });
   return s;
 }
+
+// Each relationship is a balance of products. A chosen variable occurs in one
+// term only; isolating that term gives its exact inverse (including geometry).
+export type EquationVariable = { key: string; label: string; units: UnitTable; zero?: boolean; max?: number; integer?: boolean };
+type Term = { coefficient: number; factors: Record<string, number> };
+export type Equation = { id: string; module: string; label: string; formula: string; variables: EquationVariable[]; terms: Term[]; example: Record<string, number>; order?: boolean };
+const SCALAR = { "—": 1 };
+const RATE = { "/h": 24, "/jour": 1, "/semaine": 1 / 7, "/mois": 1 / 30 };
+const AREA = { "m²": 1, "cm²": 0.0001 };
+const LENGTH = { m: 1, cm: 0.01, mm: 0.001 };
+const SPEED = { "m/h": 1, "m/s": 3600 };
+const variable = (key: string, label: string, units: UnitTable, extra: Partial<EquationVariable> = {}): EquationVariable => ({ key, label, units, ...extra });
+const term = (coefficient: number, factors: Record<string, number>): Term => ({ coefficient, factors });
+const equation = (id: string, module: string, label: string, formula: string, variables: EquationVariable[], terms: Term[], example: Record<string, number>, order = false): Equation => ({ id, module, label, formula, variables, terms, example, order });
+const cm = variable("Cm", "Concentration de la solution mère (Cm)", CONC);
+const dose = variable("D", "Dose appliquée (D)", CONC);
+const waterFlow = variable("Qe", "Débit d'eau (Qe)", FLOW);
+const injection = variable("Qi", "Débit d'injection (Qi)", INJ);
+const waterVolume = variable("Ve", "Volume d'eau (Ve)", VOL);
+const injectedVolume = variable("Vi", "Volume de solution injectée (Vi)", VOL);
+const duration = variable("t", "Durée (t)", TIME);
+const mass = variable("m", "Masse de produit commercial (m)", MASS);
+const purityVar = variable("p", "Teneur en produit actif", { "%": 1 }, { max: 100 });
+const concentration = variable("C", "Concentration de la cuve (C)", CONC);
+const volume = variable("V", "Volume utile / final (V)", VOL);
+const sizingFlow = variable("Q", "Débit d'eau (Q)", { "m³/h": 1, "L/s": 3.6, "L/min": 0.06, "L/h": 0.001, "m³/jour": 1 / 24 });
+const sizingVolume = variable("V", "Volume utile total (V)", { "m³": 1, L: 0.001 });
+const area = variable("S", "Surface totale (S)", AREA);
+const height = variable("H", "Hauteur utile (H)", LENGTH);
+const speed = variable("v", "Vitesse ascensionnelle / de filtration", SPEED);
+const number = variable("n", "Nombre d'unités identiques", { unités: 1 }, { integer: true });
+const unitArea = variable("Su", "Surface par unité (Su)", AREA);
+const remaining = variable("R", "Stock restant (R)", SCALAR, { zero: true });
+const dailyRate = variable("r", "Consommation par période", RATE);
+const days = variable("T", "Autonomie", { jours: 1, h: 1 / 24 });
+const period = variable("P", "Période de prévision", { jours: 1, semaines: 7, mois: 30 });
+const price = variable("prix", "Prix unitaire", { "monnaie / quantité": 1 }, { zero: true });
+const cost = variable("coût", "Coût", { "unité monétaire": 1 }, { zero: true });
+
+export const EQUATIONS: Equation[] = [
+  equation("continu", "dosage", "Dosage en continu", "Qi × Cm = D × Qe", [injection, cm, dose, waterFlow], [term(1, { Qi: 1, Cm: 1 }), term(-1, { D: 1, Qe: 1 })], { Qi: 0.002625, Cm: 40000, D: 30, Qe: 3.5 }),
+  equation("lot", "dosage", "Dosage par lot", "Vi × Cm = D × Ve", [injectedVolume, cm, dose, waterVolume], [term(1, { Vi: 1, Cm: 1 }), term(-1, { D: 1, Ve: 1 })], { Vi: 0.5, Cm: 40000, D: 2, Ve: 10000 }),
+  equation("consommation", "dosage", "Consommation / autonomie de solution", "Vi = Qi × 3 600 × t (Qi en L/s, t en h)", [injectedVolume, injection, duration], [term(1, { Vi: 1 }), term(-3600, { Qi: 1, t: 1 })], { Vi: 226.8, Qi: 0.002625, t: 24 }),
+  equation("eau", "dosage", "Volume d'eau et durée de traitement", "Ve = Qe × 3 600 × t", [waterVolume, waterFlow, duration], [term(1, { Ve: 1 }), term(-3600, { Qe: 1, t: 1 })], { Ve: 302400, Qe: 3.5, t: 24 }),
+  equation("masseActive", "dosage", "Masse de substance active", "m_act = D × Ve", [variable("ma", "Masse de substance active", MASS), dose, waterVolume], [term(1, { ma: 1 }), term(-1, { D: 1, Ve: 1 })], { ma: 40000000, D: 40, Ve: 1000000 }),
+  equation("capacite", "dosage", "Produit commercial et eau traitable", "m × teneur / 100 = D × Ve", [mass, purityVar, dose, waterVolume], [term(0.01, { m: 1, p: 1 }), term(-1, { D: 1, Ve: 1 })], { m: 50000000, p: 80, D: 40, Ve: 1000000 }),
+  equation("autonomieProduit", "dosage", "Autonomie du produit commercial", "m × teneur / 100 = D × Qe × 3 600 × t", [mass, purityVar, dose, waterFlow, duration], [term(0.01, { m: 1, p: 1 }), term(-3600, { D: 1, Qe: 1, t: 1 })], { m: 12600000, p: 80, D: 10, Qe: 3.5, t: 80 }),
+  equation("residuel", "chlore", "Dose, demande et résiduel théorique", "D = demande + résiduel", [dose, variable("dem", "Demande en chlore", CONC, { zero: true }), variable("res", "Chlore résiduel théorique", CONC, { zero: true })], [term(1, { D: 1 }), term(-1, { dem: 1 }), term(-1, { res: 1 })], { D: 2, dem: 1.5, res: 0.5 }),
+  equation("preparation", "dilution", "Préparation / cuve de solution mère", "m × teneur / 100 = C × V", [mass, concentration, volume, purityVar], [term(0.01, { m: 1, p: 1 }), term(-1, { C: 1, V: 1 })], { m: 125000000, C: 100000, V: 1000, p: 80 }),
+  equation("titre", "dilution", "Masse active et teneur commerciale", "m_act = m × teneur / 100", [variable("ma", "Masse de substance active", MASS), mass, purityVar], [term(1, { ma: 1 }), term(-0.01, { m: 1, p: 1 })], { ma: 100000000, m: 125000000, p: 80 }),
+  equation("dilution", "dilution", "Dilution C1V1 = C2V2", "C1 × V1 = C2 × V2", [variable("V1", "Volume prélevé de solution concentrée (V1)", VOL), variable("C1", "Concentration initiale (C1)", CONC), variable("C2", "Concentration finale (C2)", CONC), variable("V2", "Volume final (V2)", VOL)], [term(1, { C1: 1, V1: 1 }), term(-1, { C2: 1, V2: 1 })], { C1: 120000, C2: 10000, V1: 10, V2: 120 }),
+  equation("eauAjoutee", "dilution", "Volumes de dilution (approximation)", "V2 = V1 + V_eau", [variable("eau", "Volume d'eau ajouté", VOL), variable("V1", "Volume de concentré (V1)", VOL), variable("V2", "Volume final (V2)", VOL)], [term(1, { V2: 1 }), term(-1, { V1: 1 }), term(-1, { eau: 1 })], { eau: 110, V1: 10, V2: 120 }),
+  equation("sejour", "dimensionnement", "Débit, volume et temps de séjour", "V = Q × t (Q en m³/h, t en h)", [sizingVolume, sizingFlow, duration], [term(1, { V: 1 }), term(-1, { Q: 1, t: 1 })], { V: 200, Q: 100, t: 2 }),
+  equation("surface", "dimensionnement", "Débit, surface et vitesse", "Q = S × v", [area, sizingFlow, speed], [term(1, { Q: 1 }), term(-1, { S: 1, v: 1 })], { Q: 100, S: 100, v: 1 }),
+  equation("hauteur", "dimensionnement", "Volume, surface et hauteur", "V = S × H", [height, sizingVolume, area], [term(1, { V: 1 }), term(-1, { S: 1, H: 1 })], { V: 200, S: 100, H: 2 }),
+  equation("unites", "dimensionnement", "Répartition entre ouvrages identiques", "S = n × Su", [unitArea, area, number], [term(1, { S: 1 }), term(-1, { n: 1, Su: 1 })], { S: 100, n: 4, Su: 25 }),
+  equation("carre", "dimensionnement", "Ouvrage carré", "Su = côté²", [variable("a", "Côté par unité", LENGTH), unitArea], [term(1, { Su: 1 }), term(-1, { a: 2 })], { Su: 25, a: 5 }),
+  equation("cercle", "dimensionnement", "Ouvrage circulaire", "Su = π × diamètre² / 4", [variable("d", "Diamètre par unité", LENGTH), unitArea], [term(1, { Su: 1 }), term(-Math.PI / 4, { d: 2 })], { Su: 25 * Math.PI, d: 10 }),
+  equation("lavage", "dimensionnement", "Filtre avec une unité en lavage", "Q = vitesse_lavage × Su × (n − 1)", [variable("vl", "Vitesse avec un filtre en lavage", SPEED), sizingFlow, unitArea, number], [term(1, { Q: 1 }), term(-1, { vl: 1, Su: 1, n: 1 }), term(1, { vl: 1, Su: 1 })], { Q: 100, vl: 2, Su: 25, n: 3 }),
+  equation("stockRestant", "stock", "Stock initial, consommé et restant", "R = I − consommé", [remaining, variable("I", "Stock initial", SCALAR, { zero: true }), variable("cons", "Stock déjà consommé", SCALAR, { zero: true })], [term(1, { R: 1 }), term(-1, { I: 1 }), term(1, { cons: 1 })], { R: 400, I: 500, cons: 100 }),
+  equation("autonomieStock", "stock", "Autonomie et consommation", "R = consommation_journalière × T", [days, remaining, dailyRate], [term(1, { R: 1 }), term(-1, { r: 1, T: 1 })], { R: 400, r: 25, T: 16 }),
+  equation("besoin", "stock", "Besoin de produit sur une période", "Besoin = consommation_journalière × P", [variable("B", "Quantité consommée / besoin", SCALAR, { zero: true }), dailyRate, period], [term(1, { B: 1 }), term(-1, { r: 1, P: 1 })], { B: 750, r: 25, P: 30 }),
+  equation("commande", "stock", "Commande et stock de sécurité", "Commande = max(consommation × P + sécurité − R, 0)", [variable("O", "Quantité à commander", SCALAR, { zero: true }), dailyRate, period, variable("securite", "Stock de sécurité", SCALAR, { zero: true }), remaining], [term(1, { O: 1 }), term(-1, { r: 1, P: 1 }), term(-1, { securite: 1 }), term(1, { R: 1 })], { O: 400, r: 25, P: 30, securite: 50, R: 400 }, true),
+  equation("cout", "stock", "Coût et prix unitaire", "Coût = quantité × prix", [cost, variable("quantite", "Quantité de produit", SCALAR, { zero: true }), price], [term(1, { coût: 1 }), term(-1, { quantite: 1, prix: 1 })], { coût: 2000, quantite: 400, prix: 5 }),
+  equation("coutPeriode", "stock", "Coût de consommation sur une période", "Coût = consommation_journalière × P × prix", [cost, dailyRate, period, price], [term(1, { coût: 1 }), term(-1, { r: 1, P: 1, prix: 1 })], { coût: 3750, r: 25, P: 30, prix: 5 }),
+];
+
+export type ReversibleSheet = Sheet & { solved?: { key: string; value: number; unit: string } };
+export function computeReversible(id: string, target: string, inputs: Record<string, Q>, outputUnit: string, quantityUnit = "kg"): ReversibleSheet {
+  const eq = EQUATIONS.find((e) => e.id === id);
+  const s: ReversibleSheet = emptySheet(eq?.module ?? "calcul", eq?.label ?? "Calcul réversible");
+  const unknown = eq?.variables.find((v) => v.key === target);
+  if (!eq || !unknown) { s.checks.push({ level: "error", msg: "Relation ou paramètre inconnu." }); return s; }
+  const values: Record<string, number> = {};
+  const displayUnit = (u: string) => u === "—" ? quantityUnit : eq.module === "stock" && u.startsWith("/") ? `${quantityUnit}${u}` : u;
+  for (const v of eq.variables) {
+    if (v.key === target) continue;
+    const q = inputs[v.key];
+    if (!req(s, q, v.label, !v.zero) || !q) continue;
+    try {
+      const b = base(q, v.units);
+      if (!Number.isFinite(b)) throw new Error("Valeur non finie.");
+      if (v.max !== undefined && b > v.max) throw new Error(`${v.label} : maximum ${v.max}.`);
+      if (v.integer && !Number.isInteger(b)) throw new Error("Le nombre d'unités doit être entier.");
+      values[v.key] = b;
+      s.inputs.push({ label: v.label, value: `${fmt(q.v as number)} ${displayUnit(q.u)}` });
+      const baseUnit = Object.keys(v.units).find((u) => v.units[u] === 1) ?? "—";
+      s.conversions.push({ label: v.label, value: `${fmt(q.v as number)} ${displayUnit(q.u)} → ${fmt(b)} ${displayUnit(baseUnit)}` });
+    } catch (e) { s.checks.push({ level: "error", msg: e instanceof Error ? e.message : "Unité invalide." }); }
+  }
+  if (s.checks.some((c) => c.level === "error")) return s;
+  if (eq.order && target !== "O" && values["O"] === 0) {
+    s.checks.push({ level: "error", msg: "Une commande nulle donne seulement une inégalité : ce paramètre ne peut pas être déterminé de façon unique." }); return s;
+  }
+  let coefficient = 0, constant = 0, power = 1;
+  for (const t of eq.terms) {
+    let product = t.coefficient;
+    for (const [key, exponent] of Object.entries(t.factors)) {
+      if (key !== target) product *= Math.pow(values[key] ?? NaN, exponent);
+    }
+    if (target in t.factors) { coefficient += product; power = t.factors[target] ?? 1; }
+    else constant += product;
+  }
+  if (!Number.isFinite(coefficient) || !Number.isFinite(constant) || coefficient === 0) {
+    s.checks.push({ level: "error", msg: "Les valeurs connues ne permettent pas de déterminer une valeur unique (division par zéro ou relation indéterminée)." }); return s;
+  }
+  let answer = -constant / coefficient;
+  if (power === 2) answer = answer >= 0 ? Math.sqrt(answer) : NaN;
+  if (eq.order && target === "O") answer = Math.max(answer, 0);
+  if (!Number.isFinite(answer) || (unknown.zero ? answer < 0 : answer <= 0) || (unknown.max !== undefined && answer > unknown.max)) {
+    s.checks.push({ level: "error", msg: "Le résultat est hors du domaine physique : vérifiez les valeurs connues (valeur négative, nulle ou teneur supérieure à 100 %)." }); return s;
+  }
+  if (unknown.integer) {
+    if (Math.abs(answer - Math.round(answer)) > 1e-8) { s.checks.push({ level: "error", msg: "Les surfaces saisies ne correspondent pas à un nombre entier d'unités identiques." }); return s; }
+    answer = Math.round(answer);
+  }
+  values[target] = answer;
+  if ((id === "continu" || id === "lot") && (values["Cm"] ?? 0) <= (values["D"] ?? 0)) s.checks.push({ level: "error", msg: "La solution mère doit être plus concentrée que la dose appliquée." });
+  if (id === "dilution" && ((values["C2"] ?? 0) >= (values["C1"] ?? 0) || (values["V1"] ?? 0) >= (values["V2"] ?? 0))) s.checks.push({ level: "error", msg: "Une dilution exige C2 < C1 et V1 < V2." });
+  if (id === "lavage" && (values["n"] ?? 0) <= 1) s.checks.push({ level: "error", msg: "Au moins deux filtres sont nécessaires avec une unité en lavage." });
+  if (s.checks.some((c) => c.level === "error")) return s;
+  try {
+    const converted = fromBase(answer, unknown.units, outputUnit);
+    const unit = displayUnit(outputUnit);
+    s.solved = { key: target, value: converted, unit };
+    s.main = { label: unknown.label, value: `${fmt(converted)} ${unit}` };
+    s.steps.push({ label: `Recherche : ${unknown.label}`, formula: eq.formula, substitution: `${fmt(coefficient)} × ${target}${power === 2 ? "²" : ""} + (${fmt(constant)}) = 0`, result: s.main.value });
+    for (const u of Object.keys(unknown.units)) s.results.push({ label: displayUnit(u), value: `${fmt(fromBase(answer, unknown.units, u))} ${displayUnit(u)}` });
+    s.interpretation.push(`${unknown.label} : ${s.main.value}, selon les valeurs connues et la relation ${eq.formula}.`);
+    s.checks.push({ level: "ok", msg: "Paramètre déterminé, unités converties et données cohérentes." });
+  } catch { s.checks.push({ level: "error", msg: "Unité de résultat inconnue." }); return s; }
+  s.hypotheses.push("Les autres paramètres sont connus et constants. Concentrations exprimées sur la même base de substance active.");
+  if (eq.module === "stock") s.hypotheses.push(`Quantités dans la même unité (${quantityUnit}) ; prix par cette unité ; mois = 30 jours, semaine = 7 jours.`);
+  if (id === "eauAjoutee" || id === "dilution") s.hypotheses.push("Volumes additifs approximativement : compléter au volume final et vérifier la concentration.");
+  if (id === "residuel") s.limits.push("Bilan théorique après satisfaction de la demande. Un résiduel mesuré nul ne permet pas de déduire une demande unique : mesurer la demande séparément.");
+  if (eq.module === "dimensionnement") s.limits.push("Dimensions utiles hors revanche et boues ; valider les vitesses, le temps de contact et la réserve de lavage par conception et essais.");
+  s.limits.push("Résultats théoriques : confirmer par mesures de terrain et jar-test pour le coagulant. Le calcul ne garantit pas la potabilité.");
+  return s;
+}

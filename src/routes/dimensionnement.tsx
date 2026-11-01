@@ -4,6 +4,7 @@ import { Actions, Card, Field, PageHeader, SheetView } from "@/components/calc";
 import { computeSizing, type Sheet } from "@/lib/dosing";
 import { pageHead } from "@/lib/head";
 import { FLOW, TIME, VOL, parseNum } from "@/lib/units";
+import { ReversibleCalculator } from "@/components/ReversibleCalculator";
 
 export const Route = createFileRoute("/dimensionnement")({
   head: () => pageHead("Dimensionnement décanteur et filtre", "Volume, surface et hauteur d'un décanteur, d'un filtre ou d'un bassin de contact à partir du débit et du temps de séjour."),
@@ -25,7 +26,7 @@ function Sizing() {
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-6 py-10">
       <PageHeader title="Dimensionnement des ouvrages" subtitle="V = Q × t ; S = Q / vitesse ; H = V / S. Saisissez un temps de séjour pour obtenir le volume, ou un volume existant pour vérifier le temps de séjour." />
-      <Card>
+      <ReversibleCalculator module="dimensionnement"><Card>
         <div className="mb-4 inline-flex flex-wrap rounded-lg border p-1 print:hidden">
           {types.map(([k, l]) => (
             <button key={k} onClick={() => { setType(k); setSheet(null); }} className={`rounded-md px-4 py-1.5 text-sm ${type === k ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>{l}</button>
@@ -43,6 +44,7 @@ function Sizing() {
         <Actions onCalc={calc} onReset={() => { setF(empty); setSheet(null); }} />
       </Card>
       {sheet && <SheetView sheet={sheet} />}
+      </ReversibleCalculator>
     </div>
   );
 }
