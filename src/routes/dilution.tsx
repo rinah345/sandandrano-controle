@@ -4,6 +4,7 @@ import { Actions, Card, Field, PageHeader, SheetView } from "@/components/calc";
 import { computeDilution, computePreparation, type Sheet } from "@/lib/dosing";
 import { pageHead } from "@/lib/head";
 import { CONC, VOL, parseNum } from "@/lib/units";
+import { ReversibleCalculator } from "@/components/ReversibleCalculator";
 
 export const Route = createFileRoute("/dilution")({
   head: () => pageHead("Préparation et dilution des solutions mères", "Masse de produit commercial, concentration obtenue et dilution C1V1 = C2V2."),
@@ -25,7 +26,7 @@ function Dilution() {
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-6 py-10">
       <PageHeader title="Préparation & dilution" subtitle="Distinguez la masse de produit commercial de la masse de substance active. Le volume d'eau ajouté n'est pas égal au volume final." />
-      <Card>
+      <ReversibleCalculator module="dilution"><Card>
         <div className="mb-4 inline-flex rounded-lg border p-1 print:hidden">
           {([["prep", "Préparer à partir d'un solide"], ["dil", "Diluer une solution"]] as const).map(([k, l]) => (
             <button key={k} onClick={() => { setTab(k); setSheet(null); }} className={`rounded-md px-4 py-1.5 text-sm ${tab === k ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>{l}</button>
@@ -47,6 +48,7 @@ function Dilution() {
         <Actions onCalc={calc} onReset={() => { setP({ ...p, C: "", V: "", pur: "" }); setD({ ...d, C1: "", C2: "", V2: "" }); setSheet(null); }} />
       </Card>
       {sheet && <SheetView sheet={sheet} />}
+      </ReversibleCalculator>
     </div>
   );
 }

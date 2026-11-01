@@ -2,6 +2,7 @@ import { useState } from "react";
 import { computeDosing, type Q, type Sheet } from "@/lib/dosing";
 import { CONC, FLOW, INJ, MASS, TIME, VOL, parseNum } from "@/lib/units";
 import { Actions, Card, Field, SheetView } from "./calc";
+import { ReversibleCalculator } from "./ReversibleCalculator";
 
 const K = (t: Record<string, number>) => Object.keys(t);
 type F = { v: string; u: string };
@@ -16,6 +17,10 @@ function initial(kind: "chlore" | "sulfate") {
 }
 
 export function DosingCalculator({ kind }: { kind: "chlore" | "sulfate" }) {
+  return <ReversibleCalculator module={kind}><DetailedDosingCalculator kind={kind} /></ReversibleCalculator>;
+}
+
+function DetailedDosingCalculator({ kind }: { kind: "chlore" | "sulfate" }) {
   const [mode, setMode] = useState<"continu" | "lot">("continu");
   const [f, setF] = useState(initial(kind));
   const [sheet, setSheet] = useState<Sheet | null>(null);
