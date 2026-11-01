@@ -10,10 +10,10 @@ export function Field({ label, value, onChange, unit, units, onUnit, hint, optio
     <label className="block">
       <span className="text-sm font-medium">{label}{optional && <span className="ml-1 text-xs font-normal text-muted-foreground">(facultatif)</span>}</span>
       <div className="mt-1 flex gap-2">
-        <input inputMode="decimal" value={value} onChange={(e) => onChange(e.target.value)} placeholder="—"
+        <input aria-label={label} inputMode="decimal" value={value} onChange={(e) => onChange(e.target.value)} placeholder="—"
           className="min-w-0 flex-1 rounded-md border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring" />
         {units ? (
-          <select value={unit} onChange={(e) => onUnit?.(e.target.value)} className="w-28 rounded-md border bg-background px-2 py-2 text-sm">
+          <select aria-label={`Unité — ${label}`} value={unit} onChange={(e) => onUnit?.(e.target.value)} className="w-28 rounded-md border bg-background px-2 py-2 text-sm">
             {units.map((u) => <option key={u}>{u}</option>)}
           </select>
         ) : unit ? <span className="flex w-28 items-center text-sm text-muted-foreground">{unit}</span> : null}

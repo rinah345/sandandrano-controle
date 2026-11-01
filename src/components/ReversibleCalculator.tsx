@@ -44,14 +44,14 @@ export function ReversibleCalculator({ module, children }: Props) {
         <Card>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block"><span className="text-sm font-medium">Relation de calcul</span>
-              <select className="mt-1 w-full min-w-0 rounded-md border bg-background px-3 py-2" value={eq.id} onChange={(e) => {
+              <select aria-label="Relation de calcul" className="mt-1 w-full min-w-0 rounded-md border bg-background px-3 py-2" value={eq.id} onChange={(e) => {
                 const next = equations.find((item) => item.id === e.target.value);
                 if (!next) return;
                 setId(next.id); setTarget(next.variables[0]?.key ?? ""); setFields({}); setSheet(null);
               }}>{equations.map((e) => <option value={e.id} key={e.id}>{e.label}</option>)}</select>
             </label>
             <label className="block"><span className="text-sm font-medium">Paramètre à trouver</span>
-              <select className="mt-1 w-full min-w-0 rounded-md border bg-background px-3 py-2" value={unknown.key} onChange={(e) => { setTarget(e.target.value); setSheet(null); }}>
+              <select aria-label="Paramètre à trouver" className="mt-1 w-full min-w-0 rounded-md border bg-background px-3 py-2" value={unknown.key} onChange={(e) => { setTarget(e.target.value); setSheet(null); }}>
                 {eq.variables.map((v) => <option key={v.key} value={v.key}>{v.label}</option>)}
               </select>
             </label>
