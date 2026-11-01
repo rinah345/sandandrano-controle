@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeDilution, computeDosing, computePreparation, computeStock, finalConcentration } from "./dosing";
+import { computeDilution, computeDosing, computePreparation, computeStock, finalConcentration, EQUATIONS, computeReversible } from "./dosing";
 import { CONC, FLOW, INJ, VOL, MASS, toBase, fromBase } from "./units";
 
 const q = (v: number, u: string) => ({ v, u });
@@ -21,6 +21,55 @@ describe("conversions", () => {
   it("volumes et masses", () => {
     expect(toBase(2, VOL, "m³")).toBe(2000);
     expect(toBase(1, MASS, "kg")).toBe(1e6);
+  });
+});
+
+describe("chaque paramètre est réversible", () => {
+  for (const equation of EQUATIONS) {
+    for (const target of equation.variables) {
+      it(`${equation.id} : retrouver ${target.key}`, () => {
+        const inputs = Object.fromEntries(equation.variables.map((variable) => {
+          const unit = Object.keys(variable.units)[0] ?? "—";
+          return [variable.key, q(fromBase(equation.example[variable.key] ?? 0, variable.units, unit), unit)];
+        }));
+        // The target must be calculated, never copied from its input.
+        inputs[target.key] = { v: NaN, u: inputs[target.key]?.u ?? "—" };
+        const unit = Object.keys(target.units)[0] ?? "—";
+        const result = computeReversible(equation.id, target.key, inputs, unit);
+        expect(result.checks.filter((c) => c.level === "error")).toEqual([]);
+        expect(result.solved?.value).toBeCloseTo(fromBase(equation.example[target.key] ?? 0, target.units, unit), 7);
+      });
+    }
+  }
+  it("refuse l'inverse d'une commande nulle non unique", () => {
+    const s = computeReversible("commande", "P", { O: q(0, "—"), r: q(25, "/jour"), securite: q(0, "—"), R: q(400, "—") }, "jours");
+    expect(s.solved).toBeUndefined();
+    expect(s.checks.some((c) => c.level === "error")).toBe(true);
+  });
+  it("commande directe plafonnée à zéro", () => {
+    const s = computeReversible("commande", "O", { r: q(1, "/jour"), P: q(10, "jours"), securite: q(0, "—"), R: q(400, "—") }, "—");
+    expect(s.solved?.value).toBe(0);
+  });
+  it("refuse une teneur calculée supérieure à 100 %", () => {
+    const s = computeReversible("preparation", "p", { m: q(1, "kg"), C: q(100, "g/L"), V: q(100, "L") }, "%");
+    expect(s.solved).toBeUndefined();
+  });
+  it("refuse les unités inconnues et valeurs infinies", () => {
+    expect(computeReversible("sejour", "V", { Q: q(10, "inconnue"), t: q(2, "h") }, "m³").solved).toBeUndefined();
+    expect(computeReversible("sejour", "V", { Q: q(Infinity, "m³/h"), t: q(2, "h") }, "m³").solved).toBeUndefined();
+  });
+  it("refuse une dilution qui concentre", () => {
+    expect(computeReversible("dilution", "C2", { C1: q(1, "g/L"), V1: q(20, "L"), V2: q(10, "L") }, "g/L").solved).toBeUndefined();
+  });
+  it("refuse un nombre fractionnaire d'ouvrages", () => {
+    expect(computeReversible("unites", "n", { S: q(100, "m²"), Su: q(30, "m²") }, "unités").solved).toBeUndefined();
+  });
+  it("refuse la division par zéro", () => {
+    expect(computeReversible("cout", "prix", { coût: q(10, "unité monétaire"), quantite: q(0, "—") }, "monnaie / quantité").solved).toBeUndefined();
+  });
+  it("refuse une demande négative et accepte un résiduel théorique nul", () => {
+    expect(computeReversible("residuel", "dem", { D: q(1, "mg/L"), res: q(2, "mg/L") }, "mg/L").solved).toBeUndefined();
+    expect(computeReversible("residuel", "res", { D: q(2, "mg/L"), dem: q(2, "mg/L") }, "mg/L").solved?.value).toBe(0);
   });
 });
 
