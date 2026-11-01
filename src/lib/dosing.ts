@@ -481,7 +481,7 @@ export function computeReversible(id: string, target: string, inputs: Record<str
     } catch (e) { s.checks.push({ level: "error", msg: e instanceof Error ? e.message : "Unité invalide." }); }
   }
   if (s.checks.some((c) => c.level === "error")) return s;
-  if (eq.order && target !== "O" && values.O === 0) {
+  if (eq.order && target !== "O" && values["O"] === 0) {
     s.checks.push({ level: "error", msg: "Une commande nulle donne seulement une inégalité : ce paramètre ne peut pas être déterminé de façon unique." }); return s;
   }
   let coefficient = 0, constant = 0, power = 1;
@@ -507,9 +507,9 @@ export function computeReversible(id: string, target: string, inputs: Record<str
     answer = Math.round(answer);
   }
   values[target] = answer;
-  if ((id === "continu" || id === "lot") && (values.Cm ?? 0) <= (values.D ?? 0)) s.checks.push({ level: "error", msg: "La solution mère doit être plus concentrée que la dose appliquée." });
-  if (id === "dilution" && ((values.C2 ?? 0) >= (values.C1 ?? 0) || (values.V1 ?? 0) >= (values.V2 ?? 0))) s.checks.push({ level: "error", msg: "Une dilution exige C2 < C1 et V1 < V2." });
-  if (id === "lavage" && (values.n ?? 0) <= 1) s.checks.push({ level: "error", msg: "Au moins deux filtres sont nécessaires avec une unité en lavage." });
+  if ((id === "continu" || id === "lot") && (values["Cm"] ?? 0) <= (values["D"] ?? 0)) s.checks.push({ level: "error", msg: "La solution mère doit être plus concentrée que la dose appliquée." });
+  if (id === "dilution" && ((values["C2"] ?? 0) >= (values["C1"] ?? 0) || (values["V1"] ?? 0) >= (values["V2"] ?? 0))) s.checks.push({ level: "error", msg: "Une dilution exige C2 < C1 et V1 < V2." });
+  if (id === "lavage" && (values["n"] ?? 0) <= 1) s.checks.push({ level: "error", msg: "Au moins deux filtres sont nécessaires avec une unité en lavage." });
   if (s.checks.some((c) => c.level === "error")) return s;
   try {
     const converted = fromBase(answer, unknown.units, outputUnit);
