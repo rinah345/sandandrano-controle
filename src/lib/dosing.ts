@@ -465,6 +465,7 @@ export function computeReversible(id: string, target: string, inputs: Record<str
   const unknown = eq?.variables.find((v) => v.key === target);
   if (!eq || !unknown) { s.checks.push({ level: "error", msg: "Relation ou paramètre inconnu." }); return s; }
   const values: Record<string, number> = {};
+  const displayUnit = (u: string) => u === "—" ? quantityUnit : eq.module === "stock" && u.startsWith("/") ? `${quantityUnit}${u}` : u;
   for (const v of eq.variables) {
     if (v.key === target) continue;
     const q = inputs[v.key];
@@ -475,9 +476,9 @@ export function computeReversible(id: string, target: string, inputs: Record<str
       if (v.max !== undefined && b > v.max) throw new Error(`${v.label} : maximum ${v.max}.`);
       if (v.integer && !Number.isInteger(b)) throw new Error("Le nombre d'unités doit être entier.");
       values[v.key] = b;
-      s.inputs.push({ label: v.label, value: show(q) });
+      s.inputs.push({ label: v.label, value: `${fmt(q.v as number)} ${displayUnit(q.u)}` });
       const baseUnit = Object.keys(v.units).find((u) => v.units[u] === 1) ?? "—";
-      s.conversions.push({ label: v.label, value: `${show(q)} → ${fmt(b)} ${baseUnit === "—" ? quantityUnit : baseUnit}` });
+      s.conversions.push({ label: v.label, value: `${fmt(q.v as number)} ${displayUnit(q.u)} → ${fmt(b)} ${displayUnit(baseUnit)}` });
     } catch (e) { s.checks.push({ level: "error", msg: e instanceof Error ? e.message : "Unité invalide." }); }
   }
   if (s.checks.some((c) => c.level === "error")) return s;
@@ -513,11 +514,12 @@ export function computeReversible(id: string, target: string, inputs: Record<str
   if (s.checks.some((c) => c.level === "error")) return s;
   try {
     const converted = fromBase(answer, unknown.units, outputUnit);
-    const unit = outputUnit === "—" ? quantityUnit : outputUnit;
+    const unit = displayUnit(outputUnit);
     s.solved = { key: target, value: converted, unit };
     s.main = { label: unknown.label, value: `${fmt(converted)} ${unit}` };
     s.steps.push({ label: `Recherche : ${unknown.label}`, formula: eq.formula, substitution: `${fmt(coefficient)} × ${target}${power === 2 ? "²" : ""} + (${fmt(constant)}) = 0`, result: s.main.value });
-    for (const u of Object.keys(unknown.units)) s.results.push({ label: u === "—" ? quantityUnit : u, value: `${fmt(fromBase(answer, unknown.units, u))} ${u === "—" ? quantityUnit : u}` });
+    for (const u of Object.keys(unknown.units)) s.results.push({ label: displayUnit(u), value: `${fmt(fromBase(answer, unknown.units, u))} ${displayUnit(u)}` });
+    s.interpretation.push(`${unknown.label} : ${s.main.value}, selon les valeurs connues et la relation ${eq.formula}.`);
     s.checks.push({ level: "ok", msg: "Paramètre déterminé, unités converties et données cohérentes." });
   } catch { s.checks.push({ level: "error", msg: "Unité de résultat inconnue." }); return s; }
   s.hypotheses.push("Les autres paramètres sont connus et constants. Concentrations exprimées sur la même base de substance active.");
