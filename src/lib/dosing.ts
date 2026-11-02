@@ -431,6 +431,9 @@ const price = variable("prix", "Prix unitaire", { "monnaie / quantité": 1 }, { 
 const cost = variable("coût", "Coût", { "unité monétaire": 1 }, { zero: true });
 
 export const EQUATIONS: Equation[] = [
+  equation("essaiInjection", "essais", "Dose et volume ajouté au bécher", "Vi × Cm = D × Ve (même base de produit)", [injectedVolume, cm, dose, waterVolume], [term(1, { Vi: 1, Cm: 1 }), term(-1, { D: 1, Ve: 1 })], { Vi: 0.002, Cm: 10000, D: 20, Ve: 1 }),
+  equation("abattement", "essais", "Abattement de turbidité", "Tf = T0 × (1 − rendement / 100)", [variable("eta", "Abattement de turbidité", { "%": 1 }, { zero: true, max: 100 }), variable("T0", "Turbidité brute", { NTU: 1 }), variable("Tf", "Turbidité après décantation", { NTU: 1 }, { zero: true })], [term(1, { Tf: 1 }), term(-1, { T0: 1 }), term(0.01, { T0: 1, eta: 1 })], { eta: 98, T0: 50, Tf: 1 }),
+  equation("ctEssai", "essais", "Exposition CT indicative", "CT = C_libre × 60 × t_effectif (t en h)", [variable("CT", "CT indicatif", { "mg·min/L": 1 }, { zero: true }), variable("Cl", "Chlore libre en fin de contact", CONC, { zero: true }), variable("te", "Temps de contact effectif", TIME)], [term(1, { CT: 1 }), term(-60, { Cl: 1, te: 1 })], { CT: 15, Cl: 0.5, te: 0.5 }),
   equation("continu", "dosage", "Dosage en continu", "Qi × Cm = D × Qe", [injection, cm, dose, waterFlow], [term(1, { Qi: 1, Cm: 1 }), term(-1, { D: 1, Qe: 1 })], { Qi: 0.002625, Cm: 40000, D: 30, Qe: 3.5 }),
   equation("lot", "dosage", "Dosage par lot", "Vi × Cm = D × Ve", [injectedVolume, cm, dose, waterVolume], [term(1, { Vi: 1, Cm: 1 }), term(-1, { D: 1, Ve: 1 })], { Vi: 0.5, Cm: 40000, D: 2, Ve: 10000 }),
   equation("consommation", "dosage", "Consommation / autonomie de solution", "Vi = Qi × 3 600 × t (Qi en L/s, t en h)", [injectedVolume, injection, duration], [term(1, { Vi: 1 }), term(-3600, { Qi: 1, t: 1 })], { Vi: 226.8, Qi: 0.002625, t: 24 }),
@@ -511,6 +514,7 @@ export function computeReversible(id: string, target: string, inputs: Record<str
   if ((id === "continu" || id === "lot") && (values["Cm"] ?? 0) <= (values["D"] ?? 0)) s.checks.push({ level: "error", msg: "La solution mère doit être plus concentrée que la dose appliquée." });
   if (id === "dilution" && ((values["C2"] ?? 0) >= (values["C1"] ?? 0) || (values["V1"] ?? 0) >= (values["V2"] ?? 0))) s.checks.push({ level: "error", msg: "Une dilution exige C2 < C1 et V1 < V2." });
   if (id === "lavage" && (values["n"] ?? 0) <= 1) s.checks.push({ level: "error", msg: "Au moins deux filtres sont nécessaires avec une unité en lavage." });
+  if (id === "abattement" && (values["Tf"] ?? 0) > (values["T0"] ?? 0)) s.checks.push({ level: "error", msg: "Un abattement positif exige une turbidité finale au plus égale à la turbidité initiale." });
   if (s.checks.some((c) => c.level === "error")) return s;
   try {
     const converted = fromBase(answer, unknown.units, outputUnit);
@@ -526,7 +530,91 @@ export function computeReversible(id: string, target: string, inputs: Record<str
   if (eq.module === "stock") s.hypotheses.push(`Quantités dans la même unité (${quantityUnit}) ; prix par cette unité ; mois = 30 jours, semaine = 7 jours.`);
   if (id === "eauAjoutee" || id === "dilution") s.hypotheses.push("Volumes additifs approximativement : compléter au volume final et vérifier la concentration.");
   if (id === "residuel") s.limits.push("Bilan théorique après satisfaction de la demande. Un résiduel mesuré nul ne permet pas de déduire une demande unique : mesurer la demande séparément.");
+  if (id === "ctEssai") s.limits.push("CT indicatif uniquement : le temps effectif n'est pas le temps nominal V/Q. Valider l'hydraulique, la température et les exigences propres aux microorganismes ; aucun taux d'inactivation n'est déduit.");
   if (eq.module === "dimensionnement") s.limits.push("Dimensions utiles hors revanche et boues ; valider les vitesses, le temps de contact et la réserve de lavage par conception et essais.");
   s.limits.push("Résultats théoriques : confirmer par mesures de terrain et jar-test pour le coagulant. Le calcul ne garantit pas la potabilité.");
+  return s;
+}
+
+export type TrialPoint = { dose: number; response: number; ph: number; total?: number };
+export type TrialInput = {
+  kind: "chlore" | "sulfate"; points: TrialPoint[]; rawTurbidity: number;
+  contactMinutes: number; temperature: number; target: number; maxResidual: number;
+  phMin: number; phMax: number; stockConcentration: Q; beakerVolume: Q;
+  breakpoint: number | null; metadata: Row[]; demonstration: boolean;
+};
+export type TrialResult = Sheet & {
+  series: (TrialPoint & { removal: number; combined?: number; demand?: number; injectionMl: number })[];
+  selectedDose?: number;
+};
+
+/** Analyse de mesures, sans interpolation ni identification automatique du breakpoint. */
+export function computeTrials(inp: TrialInput): TrialResult {
+  const chlorine = inp.kind === "chlore";
+  const s: TrialResult = { ...emptySheet("essais", chlorine ? "Essai de chloration — dose / résiduel" : "Jar-test — sulfate d'aluminium"), series: [] };
+  const error = (msg: string) => s.checks.push({ level: "error", msg });
+  for (const [name, value, positive] of [
+    ["Turbidité brute", inp.rawTurbidity, !chlorine], ["Temps de contact / décantation", inp.contactMinutes, true],
+    ["Objectif opérationnel", inp.target, true], ["Température", inp.temperature, false],
+  ] as const) if (!Number.isFinite(value) || (positive ? value <= 0 : value < 0)) error(`${name} : valeur finie ${positive ? "strictement positive" : "positive ou nulle"} requise.`);
+  if (chlorine && (!Number.isFinite(inp.maxResidual) || inp.maxResidual < inp.target)) error("La limite opérationnelle de chlore doit être au moins égale à l'objectif.");
+  if (!chlorine && (!Number.isFinite(inp.phMin) || !Number.isFinite(inp.phMax) || inp.phMin < 0 || inp.phMax > 14 || inp.phMin > inp.phMax)) error("Plage de pH opérationnelle invalide (0 à 14).");
+  if (inp.breakpoint !== null && (!Number.isFinite(inp.breakpoint) || inp.breakpoint < 0)) error("Dose repère du breakpoint invalide.");
+  if (inp.points.length < 3) error("Au moins trois mesures sont nécessaires pour comparer les doses.");
+  let stock = NaN, beaker = NaN;
+  try {
+    stock = toBase(inp.stockConcentration.v ?? NaN, CONC, inp.stockConcentration.u);
+    beaker = toBase(inp.beakerVolume.v ?? NaN, VOL, inp.beakerVolume.u);
+  } catch { error("Unité de solution mère ou de volume inconnue."); }
+  if (!Number.isFinite(stock) || stock <= 0 || !Number.isFinite(beaker) || beaker <= 0) error("Concentration de solution mère et volume du bécher strictement positifs requis.");
+  const doses = new Set<number>();
+  inp.points.forEach((p, i) => {
+    if (![p.dose, p.response, p.ph].every(Number.isFinite) || p.dose < 0 || p.response < 0 || p.ph < 0 || p.ph > 14) error(`Essai ${i + 1} : dose, mesure ou pH invalide.`);
+    if (doses.has(p.dose)) error(`Dose ${fmt(p.dose)} mg/L répétée : regrouper les réplicats après contrôle analytique.`);
+    doses.add(p.dose);
+    if (chlorine && (p.total === undefined || !Number.isFinite(p.total) || p.total < p.response || p.total > p.dose)) error(`Essai ${i + 1} : exiger 0 ≤ chlore libre ≤ chlore total ≤ dose, sans chlore initial.`);
+    if (p.dose >= stock) error(`Essai ${i + 1} : solution mère insuffisamment concentrée.`);
+  });
+  if (s.checks.some((c) => c.level === "error")) return s;
+  s.inputs.push(...inp.metadata, { label: "Origine des données", value: inp.demonstration ? "Exemple fictif — non utilisable pour le réglage" : "Mesures saisies par l'opérateur" },
+    { label: "Turbidité brute", value: `${fmt(inp.rawTurbidity)} NTU` }, { label: "Température", value: `${fmt(inp.temperature)} °C` },
+    { label: chlorine ? "Contact effectif de l'essai" : "Décantation", value: `${fmt(inp.contactMinutes)} min` },
+    { label: "Objectif opérationnel", value: `${fmt(inp.target)} ${chlorine ? "mg/L de chlore libre" : "NTU après décantation"}` },
+    { label: "Critère complémentaire", value: chlorine ? `Chlore libre ≤ ${fmt(inp.maxResidual)} mg/L ; pH < 8` : `pH ${fmt(inp.phMin)} à ${fmt(inp.phMax)}` });
+  if (chlorine) s.inputs.push({ label: "Breakpoint repéré par l'opérateur", value: inp.breakpoint === null ? "Non renseigné — aucune détection automatique" : `${fmt(inp.breakpoint)} mg/L` });
+  s.conversions.push({ label: "Solution mère (même base que la dose)", value: `${show(inp.stockConcentration)} → ${fmt(stock)} mg/L` }, { label: "Bécher", value: `${show(inp.beakerVolume)} → ${fmt(beaker)} L` });
+  s.series = [...inp.points].sort((a, b) => a.dose - b.dose).map((p) => ({ ...p, removal: inp.rawTurbidity > 0 ? 100 * (inp.rawTurbidity - p.response) / inp.rawTurbidity : 0,
+    injectionMl: p.dose * beaker / stock * 1000,
+    ...(chlorine && p.total !== undefined ? { combined: p.total - p.response, demand: p.dose - p.total } : {}) }));
+  s.series.forEach((p) => {
+    s.inputs.push({ label: `Dose ${fmt(p.dose)} mg/L`, value: chlorine ? `Libre ${fmt(p.response)} ; total ${fmt(p.total ?? 0)} mg/L ; pH ${fmt(p.ph)}` : `Turbidité ${fmt(p.response)} NTU ; pH ${fmt(p.ph)}` });
+    s.results.push({ label: `Dose ${fmt(p.dose)} mg/L — ajout au bécher`, value: `${fmt(p.injectionMl)} mL` },
+      { label: `Dose ${fmt(p.dose)} mg/L — ${chlorine ? "combiné / consommé apparent" : "abattement"}`, value: chlorine ? `${fmt(p.combined ?? 0)} / ${fmt(p.demand ?? 0)} mg/L` : `${fmt(p.removal)} %` });
+    if (!chlorine && p.response > inp.rawTurbidity) s.checks.push({ level: "warn", msg: `À ${fmt(p.dose)} mg/L, turbidité supérieure à l'eau brute : abattement négatif, vérifier l'essai.` });
+  });
+  const eligible = s.series.filter((p) => chlorine
+    ? p.response >= inp.target && p.response <= inp.maxResidual && p.ph < 8 && inp.contactMinutes >= 30 && (inp.breakpoint === null || p.dose >= inp.breakpoint)
+    : p.response <= inp.target && p.ph >= inp.phMin && p.ph <= inp.phMax);
+  const selected = eligible[0];
+  if (selected) {
+    s.selectedDose = selected.dose;
+    s.main = { label: "Plus petite dose testée satisfaisant les critères saisis", value: `${fmt(selected.dose)} mg/L` };
+    s.steps.push({ label: "Ajout pour la dose retenue", formula: "Vi (mL) = D (mg/L) × Ve (L) / Cm (mg/L) × 1 000", substitution: `${fmt(selected.dose)} × ${fmt(beaker)} / ${fmt(stock)} × 1 000`, result: `${fmt(selected.injectionMl)} mL` });
+    if (chlorine) s.steps.push({ label: "CT indicatif de l'essai", formula: "CT = chlore libre final × temps effectif", substitution: `${fmt(selected.response)} × ${fmt(inp.contactMinutes)}`, result: `${fmt(selected.response * inp.contactMinutes)} mg·min/L` });
+    else s.steps.push({ label: "Abattement de turbidité", formula: "η = (T0 − Tf) / T0 × 100", substitution: `(${fmt(inp.rawTurbidity)} − ${fmt(selected.response)}) / ${fmt(inp.rawTurbidity)} × 100`, result: `${fmt(selected.removal)} %` });
+    s.interpretation.push("Dose candidate d'exploitation, non un optimum universel : confirmer par répétitions, essais affinés autour de cette dose et validation sur la station.");
+  } else { s.main = { label: "Sélection", value: "Aucune dose testée admissible" }; s.checks.push({ level: "warn", msg: "Aucun essai ne satisfait tous les critères : ajuster le protocole et refaire les mesures, sans extrapoler." }); }
+  if (inp.demonstration) s.checks.push({ level: "warn", msg: "Données fictives de démonstration : aucune décision de traitement ne doit reposer sur ces valeurs." });
+  if (chlorine) {
+    s.checks.push({ level: inp.target >= 0.5 && inp.contactMinutes >= 30 ? "info" : "warn", msg: "Repère OMS : chlore libre ≥ 0,5 mg/L après au moins 30 min, à pH < 8. Ce repère n'est pas une certification de désinfection." });
+    s.checks.push({ level: inp.rawTurbidity < 1 ? "info" : "warn", msg: "Avant désinfection, viser une turbidité < 1 NTU ; la turbidité peut protéger les microorganismes." });
+    s.steps.push({ label: "Bilans mesurés", formula: "Combiné = total − libre ; consommé apparent = dose − total", substitution: "Même instant de mesure et même base en Cl₂", result: "Voir les résultats par dose" });
+    s.limits.push("Aucun breakpoint n'est automatiquement déduit. Une baisse du résiduel total puis une remontée du libre peut suggérer une zone de rupture : densifier les essais et vérifier ammonium, pH et méthode analytique.", "CT calculé à partir du résiduel final : indicatif, sans pourcentage d'inactivation. En station utiliser un temps effectif validé (T10), pas seulement V/Q ; valider organisme cible, température et hydraulique.", "Le chlore n'est pas efficace contre tous les agents (notamment Cryptosporidium). Contrôler E. coli, sous-produits de désinfection et résiduel dans le réseau.");
+  } else {
+    s.interpretation.push("Le sulfate d'aluminium est un coagulant, pas un désinfectant. L'abattement de turbidité ne mesure pas une élimination microbiologique.");
+    s.limits.push("ASTM D2035 décrit l'essai coagulation–floculation en béchers ; aucun dosage optimal ni pH unique n'est imposé pour toutes les eaux.", "Objectif après décantation choisi par l'opérateur, distinct de la turbidité après filtration. Vérifier alcalinité, aluminium résiduel, flocs, boues et aptitude à la filtration.");
+  }
+  s.hypotheses.push(chlorine ? "Doses et résiduels exprimés en mg/L équivalent Cl₂ ; eau initialement sans chlore, même contact, température et méthode DPD pour tous les béchers." : "Dose et solution mère sur la même base : mg de sulfate commercial sec par litre, pas mg d'Al ni mg d'Al₂O₃. Même mélange, décantation et point de prélèvement pour tous les béchers.", "Volume ajouté négligeable devant le bécher ; sinon corriger le volume final. Une agitation en tr/min n'est pas un gradient G sans étalonnage de l'appareil.");
+  s.limits.push("Références : OMS, Guidelines for drinking-water quality (2022), https://www.who.int/publications/i/item/9789240045064 ; ASTM D2035, https://www.astm.org/d2035-19.html. Appliquer également les exigences nationales en vigueur ; aucune conformité réglementaire locale n'est certifiée.");
   return s;
 }
