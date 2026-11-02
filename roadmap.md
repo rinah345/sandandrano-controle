@@ -5,3 +5,6 @@
 - [x] Dimensionnement décanteur / filtre (débit, volume, temps de contact)
 - [x] Calculs réversibles : dosage, préparation, dilution, stock et dimensionnement
 - [x] Vérification de chaque paramètre et essais dans les pages
+- [ ] Essais jar-test et courbes dose–réponse chlore / sulfate avec données mesurées
+- [ ] Interprétation technique, références et calculs réversibles associés
+- [ ] Tests scientifiques et vérification des essais, graphiques et rapports
