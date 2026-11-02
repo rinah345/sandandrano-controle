@@ -63,6 +63,16 @@ function Manuel() {
           <li>Les résultats sont théoriques et ne garantissent pas la potabilité ; ils doivent être confrontés aux analyses et aux exigences sanitaires applicables.</li>
         </ul>
       </Card>
+      <section className="border-t pt-6">
+        <h2 className="mb-3 font-display text-xl">7. Essais de traitement et références</h2>
+        <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
+          <li>Jar-test : même eau, volume, mélange et décantation entre béchers. Comparer dose, turbidité et pH ; la dose candidate est la plus petite dose testée satisfaisant les critères d'exploitation saisis, pas une dose imposée par une norme.</li>
+          <li>Chloration : mesurer le libre et le total au même temps de contact. Combiné = total − libre ; consommé apparent = dose − total sur eau sans chlore initial. Le breakpoint est un repère expérimental à confirmer, jamais une valeur automatiquement certifiée.</li>
+          <li>Repère OMS : au moins 0,5 mg/L de chlore libre après au moins 30 minutes à pH &lt; 8 ; adapter le contact à la température et aux organismes cibles. Viser une faible turbidité, idéalement &lt; 1 NTU avant désinfection.</li>
+          <li>CT = résiduel final × temps effectif : exposition indicative, sans déduire un pourcentage d'inactivation. L'hydraulique (T10), la température et les contrôles microbiologiques doivent être validés.</li>
+          <li><a className="text-primary underline" href="https://www.who.int/publications/i/item/9789240045064" target="_blank" rel="noreferrer">OMS — Guidelines for drinking-water quality (2022)</a> ; <a className="text-primary underline" href="https://www.astm.org/d2035-19.html" target="_blank" rel="noreferrer">ASTM D2035-19 — Jar test</a>. Exigences nationales applicables à vérifier ; l'application ne certifie pas la conformité locale.</li>
+        </ul>
+      </section>
     </div>
   );
 }

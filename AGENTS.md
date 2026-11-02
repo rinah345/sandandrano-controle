@@ -13,3 +13,4 @@
 - All scientific calculations live in `src/lib/dosing.ts` + `src/lib/units.ts` (pure, unit-converted to mg/L, L/s, L, mg, h); UI only parses input and renders the returned `Sheet`. Why: calculations stay testable in `src/lib/dosing.test.ts`.
 - Calculation history is stored in browser localStorage (`src/lib/history.ts`), no backend. Why: works offline on field devices.
 - Reversible calculations use a shared equation catalogue and solver in `src/lib/dosing.ts`, rendered by a shared selector-based calculator. Why: every selectable unknown follows the same unit conversions and validation without duplicating scientific logic in pages.
+- Experimental treatment measurements use a shared workspace and pure analysis in the existing dosing engine; curves only connect measured points and never auto-detect a breakpoint or certify disinfection. Why: jar tests and chlorine response depend on controlled experimental conditions, not universal fitted predictions.

@@ -24,6 +24,8 @@ export function sheetToRows(s: Sheet): string[][] {
   sec("Résultats", s.results);
   sec("Prévisions", s.forecast);
   if (s.checks.length) { rows.push(["Contrôles"]); s.checks.forEach((c) => rows.push([c.level, c.msg])); }
+  sec("Interprétation", s.interpretation.map((value) => ({ label: "Interprétation", value })));
+  sec("Hypothèses et limites / références", [...s.hypotheses, ...s.limits].map((value) => ({ label: "Limite / référence", value })));
   return rows;
 }
 

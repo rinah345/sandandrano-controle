@@ -11,6 +11,8 @@ export const Route = createFileRoute("/")({
 const modules = [
   { to: "/chlore", n: "01", t: "Dosage du chlore", d: "Débit d'injection, volume par lot, autonomie, contrôle de la pompe." },
   { to: "/sulfate", n: "02", t: "Sulfate d'aluminium", d: "Coagulant : injection, masse de produit, préparation de cuve." },
+  { to: "/jar-test", n: "JT", t: "Jar-test du sulfate", d: "Mesures en béchers, turbidité, pH et courbe dose–réponse." },
+  { to: "/chloration", n: "Cl", t: "Courbe de chloration", d: "Résiduels libre et total, demande, breakpoint et CT indicatif." },
   { to: "/dilution", n: "03", t: "Préparation & dilution", d: "Solutions mères, C1V1 = C2V2, produit commercial vs actif." },
   { to: "/stock", n: "04", t: "Consommation & stock", d: "Autonomie, quantité à commander, coûts, prévisions." },
   { to: "/dimensionnement", n: "05", t: "Dimensionnement des ouvrages", d: "Décanteur, filtre, bassin de contact : volume, surface, hauteur." },
