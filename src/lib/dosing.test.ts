@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeDilution, computeDosing, computePreparation, computeStock, finalConcentration, EQUATIONS, computeReversible } from "./dosing";
+import { computeDilution, computeDosing, computePreparation, computeStock, finalConcentration, EQUATIONS, computeReversible, computeTrials, type TrialInput } from "./dosing";
 import { CONC, FLOW, INJ, VOL, MASS, toBase, fromBase } from "./units";
 
 const q = (v: number, u: string) => ({ v, u });
@@ -134,6 +134,71 @@ describe("préparation, dilution, stock", () => {
 });
 
 import { computeSizing } from "./dosing";
+const trials = (changes: Partial<TrialInput> = {}): TrialInput => ({
+  kind: "sulfate", points: [{ dose: 10, response: 18, ph: 7.1 }, { dose: 20, response: 4, ph: 6.9 }, { dose: 30, response: 1.2, ph: 6.7 }, { dose: 40, response: 0.8, ph: 6.4 }],
+  rawTurbidity: 50, contactMinutes: 30, temperature: 22, target: 2, maxResidual: 1, phMin: 6, phMax: 8,
+  stockConcentration: q(10, "g/L"), beakerVolume: q(1, "L"), breakpoint: null, metadata: [], demonstration: false, ...changes,
+});
+const chlorination = (changes: Partial<TrialInput> = {}) => trials({ kind: "chlore", rawTurbidity: 0.6, target: 0.5,
+  points: [{ dose: 2, response: 0.2, total: 0.25, ph: 7.2 }, { dose: 2.5, response: 0.6, total: 0.65, ph: 7.2 }, { dose: 3, response: 1.1, total: 1.15, ph: 7.2 }], ...changes });
+describe("essais mesurés et sélection conservatrice", () => {
+  it("retient la plus petite dose de sulfate satisfaisant 2 NTU et pH 6–8, pas la turbidité minimale", () => {
+    const s = computeTrials(trials());
+    expect(s.selectedDose).toBe(30);
+    expect(s.series.find((p) => p.dose === 30)?.removal).toBeCloseTo(97.6);
+  });
+  it("convertit la dose bécher : 30 mg/L, 1 L, 10 g/L donnent 3 mL", () => {
+    expect(computeTrials(trials()).series.find((p) => p.dose === 30)?.injectionMl).toBe(3);
+    expect(computeTrials(trials({ stockConcentration: q(1, "% (m/v)"), beakerVolume: q(1000, "mL") })).series.find((p) => p.dose === 30)?.injectionMl).toBe(3);
+  });
+  it("exclut une dose de sulfate hors plage de pH", () => {
+    expect(computeTrials(trials({ phMin: 6.8 })).selectedDose).toBeUndefined();
+  });
+  it("chlore : dose 2,5, libre 0,6, total 0,65 → combiné 0,05 et consommé 1,85", () => {
+    const s = computeTrials(chlorination());
+    expect(s.selectedDose).toBe(2.5);
+    expect(s.series[1]?.combined).toBeCloseTo(0.05);
+    expect(s.series[1]?.demand).toBeCloseTo(1.85);
+    expect(s.steps.find((step) => step.formula.startsWith("CT ="))?.result).toBe("18 mg·min/L");
+  });
+  it("respecte contact ≥30 min", () => {
+    expect(computeTrials(chlorination({ contactMinutes: 29 })).selectedDose).toBeUndefined();
+    expect(computeTrials(chlorination({ contactMinutes: 30 })).selectedDose).toBe(2.5);
+  });
+  it("respecte pH strictement inférieur à 8 pour le repère chlore", () => {
+    const points = chlorination().points.map((p) => ({ ...p, ph: 8 }));
+    expect(computeTrials(chlorination({ points })).selectedDose).toBeUndefined();
+  });
+  it("n'extrapole pas de dose et respecte la limite haute saisie", () => {
+    expect(computeTrials(chlorination({ maxResidual: 0.55 })).selectedDose).toBeUndefined();
+    expect(computeTrials(trials({ target: 0.5 })).selectedDose).toBeUndefined();
+  });
+  it("respecte le breakpoint repéré manuellement sans en inventer un", () => {
+    expect(computeTrials(chlorination({ breakpoint: 2.6, maxResidual: 2 })).selectedDose).toBe(3);
+    expect(computeTrials(chlorination()).selectedDose).toBe(2.5);
+  });
+  it("refuse un chlore total inférieur au libre", () => {
+    const points = chlorination().points.map((p) => ({ ...p, total: 0.1 }));
+    expect(computeTrials(chlorination({ points })).checks.some((c) => c.level === "error")).toBe(true);
+  });
+  it("refuse total supérieur à la dose sur eau sans chlore initial", () => {
+    const points = chlorination().points.map((p) => ({ ...p, total: p.dose + 1 }));
+    expect(computeTrials(chlorination({ points })).series).toEqual([]);
+  });
+  it("refuse doses répétées et données non finies", () => {
+    expect(computeTrials(trials({ points: [trials().points[0] ?? { dose: 10, response: 18, ph: 7 }, ...trials().points] })).series).toEqual([]);
+    expect(computeTrials(trials({ temperature: Infinity })).series).toEqual([]);
+    expect(computeTrials(trials({ beakerVolume: q(NaN, "L") })).series).toEqual([]);
+  });
+  it("garde l'abattement négatif au lieu de le masquer", () => {
+    const s = computeTrials(trials({ points: [{ dose: 0, response: 60, ph: 7 }, ...trials().points] }));
+    expect(s.series[0]?.removal).toBe(-20);
+    expect(s.checks.some((c) => c.level === "warn")).toBe(true);
+  });
+  it("CT inverse non déterminable quand le chlore est nul", () => {
+    expect(computeReversible("ctEssai", "te", { CT: q(0, "mg·min/L"), Cl: q(0, "mg/L") }, "min").solved).toBeUndefined();
+  });
+});
 describe("dimensionnement", () => {
   it("décanteur 100 m³/h, 2 h, Vh 1 m/h → 200 m³, 100 m², 2 m", () => {
     const s = computeSizing({ type: "decanteur", Q: q(100, "m³/h"), t: q(2, "h"), vh: 1 });

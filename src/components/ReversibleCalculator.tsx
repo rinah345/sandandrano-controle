@@ -5,7 +5,7 @@ import { fromBase, parseNum } from "@/lib/units";
 import { Button } from "@/components/ui/button";
 import { Card, Field, SheetView } from "./calc";
 
-type Props = { module: "chlore" | "sulfate" | "dilution" | "stock" | "dimensionnement"; children: ReactNode };
+type Props = { module: "chlore" | "sulfate" | "dilution" | "stock" | "dimensionnement" | "essais"; children: ReactNode };
 export function ReversibleCalculator({ module, children }: Props) {
   const equations = EQUATIONS.filter((e) => e.module === module || ((module === "chlore" || module === "sulfate") && (e.module === "dosage" || e.id === "preparation")));
   const [view, setView] = useState("inverse");

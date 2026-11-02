@@ -11,10 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalyseRouteImport } from './routes/analyse'
+import { Route as ChlorationRouteImport } from './routes/chloration'
 import { Route as ChloreRouteImport } from './routes/chlore'
 import { Route as DilutionRouteImport } from './routes/dilution'
 import { Route as DimensionnementRouteImport } from './routes/dimensionnement'
 import { Route as HistoriqueRouteImport } from './routes/historique'
+import { Route as JarTestRouteImport } from './routes/jar-test'
 import { Route as ManuelRouteImport } from './routes/manuel'
 import { Route as StockRouteImport } from './routes/stock'
 import { Route as SulfateRouteImport } from './routes/sulfate'
@@ -27,6 +29,11 @@ const IndexRoute = IndexRouteImport.update({
 const AnalyseRoute = AnalyseRouteImport.update({
   id: '/analyse',
   path: '/analyse',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChlorationRoute = ChlorationRouteImport.update({
+  id: '/chloration',
+  path: '/chloration',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChloreRoute = ChloreRouteImport.update({
@@ -49,6 +56,11 @@ const HistoriqueRoute = HistoriqueRouteImport.update({
   path: '/historique',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JarTestRoute = JarTestRouteImport.update({
+  id: '/jar-test',
+  path: '/jar-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ManuelRoute = ManuelRouteImport.update({
   id: '/manuel',
   path: '/manuel',
@@ -68,10 +80,12 @@ const SulfateRoute = SulfateRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analyse': typeof AnalyseRoute
+  '/chloration': typeof ChlorationRoute
   '/chlore': typeof ChloreRoute
   '/dilution': typeof DilutionRoute
   '/dimensionnement': typeof DimensionnementRoute
   '/historique': typeof HistoriqueRoute
+  '/jar-test': typeof JarTestRoute
   '/manuel': typeof ManuelRoute
   '/stock': typeof StockRoute
   '/sulfate': typeof SulfateRoute
@@ -79,10 +93,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analyse': typeof AnalyseRoute
+  '/chloration': typeof ChlorationRoute
   '/chlore': typeof ChloreRoute
   '/dilution': typeof DilutionRoute
   '/dimensionnement': typeof DimensionnementRoute
   '/historique': typeof HistoriqueRoute
+  '/jar-test': typeof JarTestRoute
   '/manuel': typeof ManuelRoute
   '/stock': typeof StockRoute
   '/sulfate': typeof SulfateRoute
@@ -91,10 +107,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/analyse': typeof AnalyseRoute
+  '/chloration': typeof ChlorationRoute
   '/chlore': typeof ChloreRoute
   '/dilution': typeof DilutionRoute
   '/dimensionnement': typeof DimensionnementRoute
   '/historique': typeof HistoriqueRoute
+  '/jar-test': typeof JarTestRoute
   '/manuel': typeof ManuelRoute
   '/stock': typeof StockRoute
   '/sulfate': typeof SulfateRoute
@@ -104,10 +122,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/analyse'
+    | '/chloration'
     | '/chlore'
     | '/dilution'
     | '/dimensionnement'
     | '/historique'
+    | '/jar-test'
     | '/manuel'
     | '/stock'
     | '/sulfate'
@@ -115,10 +135,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/analyse'
+    | '/chloration'
     | '/chlore'
     | '/dilution'
     | '/dimensionnement'
     | '/historique'
+    | '/jar-test'
     | '/manuel'
     | '/stock'
     | '/sulfate'
@@ -126,10 +148,12 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/analyse'
+    | '/chloration'
     | '/chlore'
     | '/dilution'
     | '/dimensionnement'
     | '/historique'
+    | '/jar-test'
     | '/manuel'
     | '/stock'
     | '/sulfate'
@@ -138,10 +162,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyseRoute: typeof AnalyseRoute
+  ChlorationRoute: typeof ChlorationRoute
   ChloreRoute: typeof ChloreRoute
   DilutionRoute: typeof DilutionRoute
   DimensionnementRoute: typeof DimensionnementRoute
   HistoriqueRoute: typeof HistoriqueRoute
+  JarTestRoute: typeof JarTestRoute
   ManuelRoute: typeof ManuelRoute
   StockRoute: typeof StockRoute
   SulfateRoute: typeof SulfateRoute
@@ -161,6 +187,13 @@ declare module '@tanstack/react-router' {
       path: '/analyse'
       fullPath: '/analyse'
       preLoaderRoute: typeof AnalyseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chloration': {
+      id: '/chloration'
+      path: '/chloration'
+      fullPath: '/chloration'
+      preLoaderRoute: typeof ChlorationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chlore': {
@@ -191,6 +224,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HistoriqueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/jar-test': {
+      id: '/jar-test'
+      path: '/jar-test'
+      fullPath: '/jar-test'
+      preLoaderRoute: typeof JarTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/manuel': {
       id: '/manuel'
       path: '/manuel'
@@ -218,10 +258,12 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyseRoute: AnalyseRoute,
+  ChlorationRoute: ChlorationRoute,
   ChloreRoute: ChloreRoute,
   DilutionRoute: DilutionRoute,
   DimensionnementRoute: DimensionnementRoute,
   HistoriqueRoute: HistoriqueRoute,
+  JarTestRoute: JarTestRoute,
   ManuelRoute: ManuelRoute,
   StockRoute: StockRoute,
   SulfateRoute: SulfateRoute,

@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { FlaskConical } from "lucide-react";
 import { PageHeader } from "@/components/calc";
 import { DosingCalculator } from "@/components/DosingCalculator";
 import { pageHead } from "@/lib/head";
@@ -8,6 +10,7 @@ export const Route = createFileRoute("/chlore")({
   component: () => (
     <div className="mx-auto max-w-5xl px-6 py-10">
       <PageHeader title="Dosage du chlore" subtitle="Mode A : débit d'injection à partir du débit d'eau. Mode B : volume de solution mère pour une cuve ou un bassin. Toutes les unités sont converties avant calcul." />
+      <Button asChild variant="outline" className="mb-6"><Link to="/chloration"><FlaskConical />Essais & courbe de chloration</Link></Button>
       <DosingCalculator kind="chlore" />
     </div>
   ),
