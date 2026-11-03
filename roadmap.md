@@ -8,3 +8,5 @@
 - [ ] Essais jar-test et courbes dose–réponse chlore / sulfate avec données mesurées
 - [ ] Interprétation technique, références et calculs réversibles associés
 - [ ] Tests scientifiques et vérification des essais, graphiques et rapports
+- [ ] Comptes utilisateurs et panneau d'administration (préciser les informations de profil)
+- [ ] Activer / bloquer, refus de connexion et interruption des sessions, historique réservé à l'administrateur
