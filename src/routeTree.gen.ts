@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AnalyseRouteImport } from './routes/analyse'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ChlorationRouteImport } from './routes/chloration'
 import { Route as ChloreRouteImport } from './routes/chlore'
 import { Route as DilutionRouteImport } from './routes/dilution'
@@ -18,6 +20,7 @@ import { Route as DimensionnementRouteImport } from './routes/dimensionnement'
 import { Route as HistoriqueRouteImport } from './routes/historique'
 import { Route as JarTestRouteImport } from './routes/jar-test'
 import { Route as ManuelRouteImport } from './routes/manuel'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as StockRouteImport } from './routes/stock'
 import { Route as SulfateRouteImport } from './routes/sulfate'
 
@@ -26,9 +29,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AnalyseRoute = AnalyseRouteImport.update({
   id: '/analyse',
   path: '/analyse',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChlorationRoute = ChlorationRouteImport.update({
@@ -66,6 +79,11 @@ const ManuelRoute = ManuelRouteImport.update({
   path: '/manuel',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StockRoute = StockRouteImport.update({
   id: '/stock',
   path: '/stock',
@@ -79,7 +97,9 @@ const SulfateRoute = SulfateRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/analyse': typeof AnalyseRoute
+  '/auth': typeof AuthRoute
   '/chloration': typeof ChlorationRoute
   '/chlore': typeof ChloreRoute
   '/dilution': typeof DilutionRoute
@@ -87,12 +107,15 @@ export interface FileRoutesByFullPath {
   '/historique': typeof HistoriqueRoute
   '/jar-test': typeof JarTestRoute
   '/manuel': typeof ManuelRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/stock': typeof StockRoute
   '/sulfate': typeof SulfateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/analyse': typeof AnalyseRoute
+  '/auth': typeof AuthRoute
   '/chloration': typeof ChlorationRoute
   '/chlore': typeof ChloreRoute
   '/dilution': typeof DilutionRoute
@@ -100,13 +123,16 @@ export interface FileRoutesByTo {
   '/historique': typeof HistoriqueRoute
   '/jar-test': typeof JarTestRoute
   '/manuel': typeof ManuelRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/stock': typeof StockRoute
   '/sulfate': typeof SulfateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/analyse': typeof AnalyseRoute
+  '/auth': typeof AuthRoute
   '/chloration': typeof ChlorationRoute
   '/chlore': typeof ChloreRoute
   '/dilution': typeof DilutionRoute
@@ -114,6 +140,7 @@ export interface FileRoutesById {
   '/historique': typeof HistoriqueRoute
   '/jar-test': typeof JarTestRoute
   '/manuel': typeof ManuelRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/stock': typeof StockRoute
   '/sulfate': typeof SulfateRoute
 }
@@ -121,7 +148,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/analyse'
+    | '/auth'
     | '/chloration'
     | '/chlore'
     | '/dilution'
@@ -129,12 +158,15 @@ export interface FileRouteTypes {
     | '/historique'
     | '/jar-test'
     | '/manuel'
+    | '/reset-password'
     | '/stock'
     | '/sulfate'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/analyse'
+    | '/auth'
     | '/chloration'
     | '/chlore'
     | '/dilution'
@@ -142,12 +174,15 @@ export interface FileRouteTypes {
     | '/historique'
     | '/jar-test'
     | '/manuel'
+    | '/reset-password'
     | '/stock'
     | '/sulfate'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/analyse'
+    | '/auth'
     | '/chloration'
     | '/chlore'
     | '/dilution'
@@ -155,13 +190,16 @@ export interface FileRouteTypes {
     | '/historique'
     | '/jar-test'
     | '/manuel'
+    | '/reset-password'
     | '/stock'
     | '/sulfate'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   AnalyseRoute: typeof AnalyseRoute
+  AuthRoute: typeof AuthRoute
   ChlorationRoute: typeof ChlorationRoute
   ChloreRoute: typeof ChloreRoute
   DilutionRoute: typeof DilutionRoute
@@ -169,6 +207,7 @@ export interface RootRouteChildren {
   HistoriqueRoute: typeof HistoriqueRoute
   JarTestRoute: typeof JarTestRoute
   ManuelRoute: typeof ManuelRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   StockRoute: typeof StockRoute
   SulfateRoute: typeof SulfateRoute
 }
@@ -182,11 +221,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/analyse': {
       id: '/analyse'
       path: '/analyse'
       fullPath: '/analyse'
       preLoaderRoute: typeof AnalyseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chloration': {
@@ -238,6 +291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ManuelRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/stock': {
       id: '/stock'
       path: '/stock'
@@ -257,7 +317,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   AnalyseRoute: AnalyseRoute,
+  AuthRoute: AuthRoute,
   ChlorationRoute: ChlorationRoute,
   ChloreRoute: ChloreRoute,
   DilutionRoute: DilutionRoute,
@@ -265,6 +327,7 @@ const rootRouteChildren: RootRouteChildren = {
   HistoriqueRoute: HistoriqueRoute,
   JarTestRoute: JarTestRoute,
   ManuelRoute: ManuelRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   StockRoute: StockRoute,
   SulfateRoute: SulfateRoute,
 }

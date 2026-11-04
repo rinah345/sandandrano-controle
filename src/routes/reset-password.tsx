@@ -1,0 +1,11 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { pageHead } from "@/lib/head";
+export const Route = createFileRoute("/reset-password")({ head: () => pageHead("Réinitialiser le mot de passe", "Choisir un nouveau mot de passe avec un lien de récupération sécurisé AquaDosage."), component: ResetPassword });
+function ResetPassword() {
+  const [valid, setValid] = useState(false); const [password, setPassword] = useState(""); const [message, setMessage] = useState(""); const [busy, setBusy] = useState(false);
+  useEffect(() => { if (new URLSearchParams(window.location.hash.slice(1)).get("type") === "recovery") setValid(true); const { data } = supabase.auth.onAuthStateChange((event) => { if (event === "PASSWORD_RECOVERY") setValid(true); }); return () => data.subscription.unsubscribe(); }, []);
+  return <main className="mx-auto max-w-md px-6 py-12"><h1 className="font-display text-3xl">Nouveau mot de passe</h1>{valid ? <form className="mt-6 space-y-4" onSubmit={async (e) => { e.preventDefault(); setBusy(true); const { error } = await supabase.auth.updateUser({ password }); setMessage(error ? "Lien expiré ou mot de passe refusé. Demandez un nouveau lien." : "Mot de passe modifié."); setPassword(""); setBusy(false); }}><label className="block">Mot de passe<input aria-label="Nouveau mot de passe" type="password" autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 w-full rounded-md border bg-background px-3 py-2" /></label><Button disabled={busy}>Enregistrer</Button></form> : <p className="mt-4 text-muted-foreground">Ouvrez le lien reçu par e-mail pour réinitialiser votre mot de passe.</p>}{message && <p role="status" className="mt-4">{message}</p>}<Button asChild variant="link" className="mt-4 px-0"><Link to="/auth">Connexion</Link></Button></main>;
+}

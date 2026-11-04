@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import { AccountSession, AccountControls } from "@/components/AccountSession";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -123,8 +124,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Nav />
-      <Outlet />
+      <AccountSession><Nav /><Outlet /></AccountSession>
       <Toaster />
     </QueryClientProvider>
   );
@@ -149,6 +149,7 @@ function Nav() {
           ))}
         </div>
       </div>
+      <div className="mx-auto flex max-w-6xl justify-end px-6 pb-2"><AccountControls /></div>
       {open && (
         <div className="grid border-t px-6 py-2 lg:hidden">
           {links.map(([to, l]) => (

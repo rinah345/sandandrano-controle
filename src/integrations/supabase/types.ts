@@ -14,16 +14,89 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      account_access: {
+        Row: {
+          blocked: boolean
+          revoked_before: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blocked?: boolean
+          revoked_before?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blocked?: boolean
+          revoked_before?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      account_access_audit: {
+        Row: {
+          actor_id: string
+          blocked: boolean
+          changed_at: string
+          id: string
+          target_id: string
+        }
+        Insert: {
+          actor_id: string
+          blocked: boolean
+          changed_at?: string
+          id?: string
+          target_id: string
+        }
+        Update: {
+          actor_id?: string
+          blocked?: boolean
+          changed_at?: string
+          id?: string
+          target_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      account_session_allowed: { Args: never; Returns: boolean }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      set_account_access: {
+        Args: { should_block: boolean; target: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +223,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

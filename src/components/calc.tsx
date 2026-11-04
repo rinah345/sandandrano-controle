@@ -64,7 +64,7 @@ function Rows({ rows }: { rows: { label: string; value: string }[] }) {
       {rows.map((r, i) => (
         <div key={i} className="flex justify-between gap-4 py-1.5">
           <dt className="text-muted-foreground">{r.label}</dt>
-          <dd className="text-right font-medium tabular-nums">{r.value}</dd>
+          <dd className="min-w-0 break-words text-right font-medium tabular-nums">{r.value}</dd>
         </div>
       ))}
     </dl>
@@ -124,8 +124,8 @@ export function SheetView({ sheet, saved = false }: { sheet: Sheet; saved?: bool
               {sheet.steps.map((st, i) => (
                 <li key={i} className="rounded-md border bg-muted/40 p-3 text-sm">
                   <div className="font-semibold">{st.label}</div>
-                  <div className="mt-1 font-mono text-xs">{st.formula}</div>
-                  <div className="font-mono text-xs text-muted-foreground">{st.substitution}</div>
+                  <div className="mt-1 break-words font-mono text-xs">{st.formula}</div>
+                  <div className="break-words font-mono text-xs text-muted-foreground">{st.substitution}</div>
                   <div className="mt-1 font-semibold text-primary tabular-nums">= {st.result}</div>
                 </li>
               ))}
@@ -144,7 +144,7 @@ export function SheetView({ sheet, saved = false }: { sheet: Sheet; saved?: bool
             <ul className="list-disc space-y-1 pl-5 text-sm">{sheet.interpretation.map((t, i) => <li key={i}>{t}</li>)}</ul>
           </Sec>
           <Sec n={++n} title="Hypothèses, limites et vérifications recommandées">
-            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">{[...sheet.hypotheses, ...sheet.limits].map((t, i) => <li key={i}>{t}</li>)}</ul>
+            <ul className="list-disc space-y-1 break-words pl-5 text-sm text-muted-foreground">{[...sheet.hypotheses, ...sheet.limits].map((t, i) => <li key={i}>{t}</li>)}</ul>
           </Sec>
         </>
       )}
