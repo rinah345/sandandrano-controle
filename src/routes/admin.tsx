@@ -16,10 +16,11 @@ function Admin() {
 function AdminWorkspace() {
   const queryClient = useQueryClient(); const [page, setPage] = useState(1); const [auditPage, setAuditPage] = useState(1);
   const [pending, setPending] = useState<string | null>(null); const [message, setMessage] = useState("");
+  const [retryBlock, setRetryBlock] = useState<string | null>(null);
   const fetchAccounts = useServerFn(listAccounts); const fetchAudit = useServerFn(listAccessAudit); const changeAccess = useServerFn(setAccountAccess);
   const accounts = useQuery({ queryKey: ["admin-accounts", page], queryFn: () => fetchAccounts({ data: { page } }) });
   const audit = useQuery({ queryKey: ["admin-audit", auditPage], queryFn: () => fetchAudit({ data: { page: auditPage } }) });
-  const modify = async (id: string, blocked: boolean) => { setPending(id); setMessage(""); try { const result = await changeAccess({ data: { userId: id, blocked } }); setMessage(result.warning ?? (blocked ? "Compte bloqué. Sessions antérieures invalidées pour l'application." : "Compte réactivé. Une nouvelle connexion est nécessaire.")); await Promise.all([queryClient.invalidateQueries({ queryKey: ["admin-accounts"] }), queryClient.invalidateQueries({ queryKey: ["admin-audit"] })]); } catch (e) { setMessage(e instanceof Error ? e.message : "Modification impossible."); } finally { setPending(null); } };
+  const modify = async (id: string, blocked: boolean) => { setPending(id); setMessage(""); try { const result = await changeAccess({ data: { userId: id, blocked } }); setRetryBlock(result.warning ? id : null); setMessage(result.warning ?? (blocked ? "Compte bloqué. Sessions antérieures invalidées pour l'application." : "Compte réactivé. Une nouvelle connexion est nécessaire.")); await Promise.all([queryClient.invalidateQueries({ queryKey: ["admin-accounts"] }), queryClient.invalidateQueries({ queryKey: ["admin-audit"] })]); } catch (e) { setMessage(e instanceof Error ? e.message : "Modification impossible."); } finally { setPending(null); } };
   const date = (s: string) => new Date(s).toLocaleString("fr-FR");
   return <div className="space-y-8">
     <div className="flex flex-wrap items-center justify-between gap-3 border-y py-3"><h2 className="font-display text-xl">Comptes utilisateurs</h2><Button variant="outline" size="sm" onClick={() => { void accounts.refetch(); void audit.refetch(); }}><RefreshCw />Actualiser</Button></div>
@@ -33,6 +34,7 @@ function AdminWorkspace() {
       <div className="flex items-center justify-end gap-3"><Button size="icon" variant="outline" aria-label="Comptes précédents" disabled={page === 1} onClick={() => setPage(page - 1)}><ChevronLeft /></Button><span className="text-sm">Page {page}</span><Button size="icon" variant="outline" aria-label="Comptes suivants" disabled={!accounts.data.hasNext} onClick={() => setPage(page + 1)}><ChevronRight /></Button></div>
     </>}
     {message && <p role="status" className="rounded-md border bg-muted p-3 text-sm">{message}</p>}
+    {retryBlock && <Button disabled={pending !== null} variant="destructive" onClick={() => { void modify(retryBlock, true); }}>Réessayer le blocage des connexions</Button>}
     <section className="border-t pt-6"><h2 className="mb-4 font-display text-2xl">Historique des autorisations</h2>{audit.isPending ? <p>Chargement du journal…</p> : audit.isError ? <p role="alert">Historique indisponible.</p> : <>
       {!audit.data.events.length && <p className="text-muted-foreground">Aucune modification enregistrée.</p>}
       <ul className="divide-y">{audit.data.events.map((event) => <li key={event.id} className="grid gap-2 py-4 text-sm sm:grid-cols-3"><span className="break-all font-medium">{event.target}</span><span className={event.blocked ? "text-destructive" : "text-ok"}>{event.blocked ? "Bloqué" : "Activé"} · {date(event.at)}</span><span className="break-all text-muted-foreground">Par {event.actor}</span></li>)}</ul>

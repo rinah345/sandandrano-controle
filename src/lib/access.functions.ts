@@ -7,7 +7,7 @@ export const getAccountStatus = createServerFn({ method: "POST" }).middleware([r
   if (error) throw new Error("Vérification du compte indisponible.");
   const { data: admin, error: roleError } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
   if (roleError) throw new Error("Vérification des droits indisponible.");
-  return { allowed: allowed === true, admin: admin === true };
+  return { allowed: allowed === true, admin: allowed === true && admin === true };
 });
 
 export const listAccounts = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])

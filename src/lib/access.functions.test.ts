@@ -24,7 +24,7 @@ describe("autorisation des comptes", () => {
     await expect(invoke(setAccountAccess, { context: { userId: "caller", supabase: { rpc: vi.fn().mockResolvedValue({ data: true }) } }, data: { userId: "caller", blocked: true } })).rejects.toThrow("protégé");
   });
   it("une session rejetée reste non autorisée même avec une réponse de rôle positive", async () => {
-    const rpc = vi.fn().mockResolvedValueOnce({ data: false }).mockResolvedValueOnce({ data: false });
+    const rpc = vi.fn().mockResolvedValueOnce({ data: false }).mockResolvedValueOnce({ data: true });
     expect(await invoke(getAccountStatus, { context: { userId: "caller", supabase: { rpc } } })).toEqual({ allowed: false, admin: false });
     expect(rpc).toHaveBeenNthCalledWith(1, "account_session_allowed");
   });
