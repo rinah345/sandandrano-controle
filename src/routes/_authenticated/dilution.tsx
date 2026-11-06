@@ -6,7 +6,7 @@ import { pageHead } from "@/lib/head";
 import { CONC, VOL, parseNum } from "@/lib/units";
 import { ReversibleCalculator } from "@/components/ReversibleCalculator";
 
-export const Route = createFileRoute("/dilution")({
+export const Route = createFileRoute("/_authenticated/dilution")({
   head: () => pageHead("Préparation et dilution des solutions mères", "Masse de produit commercial, concentration obtenue et dilution C1V1 = C2V2."),
   component: Dilution,
 });

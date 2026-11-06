@@ -16,18 +16,21 @@ export type Database = {
     Tables: {
       account_access: {
         Row: {
+          approved: boolean
           blocked: boolean
           revoked_before: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          approved?: boolean
           blocked?: boolean
           revoked_before?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          approved?: boolean
           blocked?: boolean
           revoked_before?: string | null
           updated_at?: string
@@ -38,6 +41,7 @@ export type Database = {
       account_access_audit: {
         Row: {
           actor_id: string
+          approved: boolean | null
           blocked: boolean
           changed_at: string
           id: string
@@ -45,6 +49,7 @@ export type Database = {
         }
         Insert: {
           actor_id: string
+          approved?: boolean | null
           blocked: boolean
           changed_at?: string
           id?: string
@@ -52,6 +57,7 @@ export type Database = {
         }
         Update: {
           actor_id?: string
+          approved?: boolean | null
           blocked?: boolean
           changed_at?: string
           id?: string

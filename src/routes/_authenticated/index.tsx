@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { pageHead } from "@/lib/head";
 import { loadHistory, type Entry } from "@/lib/history";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => pageHead("Tableau de bord", "Calcul des dosages chimiques en traitement de l'eau potable : chlore, sulfate d'aluminium, dilution, stock et manuel technique."),
   component: Dashboard,
 });

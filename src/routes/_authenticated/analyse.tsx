@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { PARAMS, evaluate, score, type Status } from "@/lib/water";
 
-export const Route = createFileRoute("/analyse")({
+export const Route = createFileRoute("/_authenticated/analyse")({
   head: () => ({
     meta: [
       { title: "Vérification des paramètres de l'eau — AquaAnalyse" },

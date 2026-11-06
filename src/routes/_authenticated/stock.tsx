@@ -6,7 +6,7 @@ import { pageHead } from "@/lib/head";
 import { parseNum } from "@/lib/units";
 import { ReversibleCalculator } from "@/components/ReversibleCalculator";
 
-export const Route = createFileRoute("/stock")({
+export const Route = createFileRoute("/_authenticated/stock")({
   head: () => pageHead("Consommation et stock de produits", "Autonomie du stock, quantité à commander, coûts et prévisions de consommation de produits chimiques."),
   component: Stock,
 });

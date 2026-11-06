@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/calc";
 import { DosingCalculator } from "@/components/DosingCalculator";
 import { pageHead } from "@/lib/head";
 
-export const Route = createFileRoute("/chlore")({
+export const Route = createFileRoute("/_authenticated/chlore")({
   head: () => pageHead("Calculateur de dosage du chlore", "Débit d'injection de solution chlorée, volume par lot, autonomie du stock et comparaison avec la pompe doseuse."),
   component: () => (
     <div className="mx-auto max-w-5xl px-6 py-10">

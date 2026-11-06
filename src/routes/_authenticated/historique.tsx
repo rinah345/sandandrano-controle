@@ -5,7 +5,7 @@ import { PageHeader, SheetView } from "@/components/calc";
 import { pageHead } from "@/lib/head";
 import { download, downloadCSV, loadHistory, saveHistory, sheetToRows, type Entry } from "@/lib/history";
 
-export const Route = createFileRoute("/historique")({
+export const Route = createFileRoute("/_authenticated/historique")({
   head: () => pageHead("Historique des calculs", "Consultez, exportez et sauvegardez les calculs de dosage enregistrés."),
   component: Historique,
 });

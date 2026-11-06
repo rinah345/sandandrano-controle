@@ -15,6 +15,13 @@
       "when": 1793862448809,
       "tag": "0001_support_verified_session_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794006376024,
+      "tag": "0002_require_explicit_account_approval",
+      "breakpoints": true
     }
   ]
 }

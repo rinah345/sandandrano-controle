@@ -23,7 +23,7 @@ function Auth() {
       } else if (mode === "signup") {
         const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
         if (error) throw error;
-        setMessage("Consultez votre e-mail et confirmez votre adresse avant de vous connecter.");
+        setMessage("Confirmez votre adresse par e-mail. Votre compte restera en attente jusqu’à l’approbation de l’administrateur.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -41,7 +41,8 @@ function Auth() {
   };
   return <main className="mx-auto max-w-md px-6 py-12">
     <h1 className="font-display text-3xl">{account.signedIn ? "Votre compte" : mode === "signup" ? "Créer un compte" : mode === "reset" ? "Mot de passe oublié" : "Connexion"}</h1>
-    {account.signedIn ? <div className="mt-6 space-y-4">{account.admin && <Button asChild><Link to="/admin">Administration</Link></Button>}<Button variant="outline" onClick={() => { void account.signOut(); }}>Déconnexion</Button></div> : <>
+    <p className="mt-4 text-sm text-muted-foreground">L’accès à AquaDosage est réservé aux comptes approuvés par l’administrateur.</p>
+    {account.signedIn ? <div className="mt-6 space-y-4">{!account.allowed && <p role="status">Compte en attente d’approbation. L’administrateur doit autoriser votre accès.</p>}{account.admin && <Button asChild><Link to="/admin">Administration</Link></Button>}<Button variant="outline" onClick={() => { void account.signOut(); }}>Déconnexion</Button></div> : <>
       <form onSubmit={submit} className="mt-6 space-y-4">
         <label className="block text-sm font-medium">Adresse e-mail<input aria-label="Adresse e-mail" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 w-full rounded-md border bg-background px-3 py-2" /></label>
         {mode !== "reset" && <label className="block text-sm font-medium">Mot de passe<input aria-label="Mot de passe" type="password" required minLength={8} autoComplete={mode === "signup" ? "new-password" : "current-password"} value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 w-full rounded-md border bg-background px-3 py-2" /></label>}
@@ -51,6 +52,6 @@ function Auth() {
       <div className="mt-4 flex flex-wrap gap-2"><Button variant="link" className="px-0" onClick={() => { setMode(mode === "signup" ? "login" : "signup"); setMessage(""); }}>{mode === "signup" ? "Déjà inscrit ? Connexion" : "Créer un compte"}</Button><Button variant="link" onClick={() => { setMode(mode === "reset" ? "login" : "reset"); setMessage(""); }}>{mode === "reset" ? "Retour à la connexion" : "Mot de passe oublié"}</Button></div>
     </>}
     {message && <p role="status" className="mt-4 rounded-md border bg-muted p-3 text-sm">{message}</p>}
-    <Button asChild variant="link" className="mt-4 px-0"><Link to="/">Retour aux calculateurs</Link></Button>
+    {account.allowed && <Button asChild variant="link" className="mt-4 px-0"><Link to="/">Accéder aux calculateurs</Link></Button>}
   </main>;
 }

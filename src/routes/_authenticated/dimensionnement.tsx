@@ -6,7 +6,7 @@ import { pageHead } from "@/lib/head";
 import { FLOW, TIME, VOL, parseNum } from "@/lib/units";
 import { ReversibleCalculator } from "@/components/ReversibleCalculator";
 
-export const Route = createFileRoute("/dimensionnement")({
+export const Route = createFileRoute("/_authenticated/dimensionnement")({
   head: () => pageHead("Dimensionnement décanteur et filtre", "Volume, surface et hauteur d'un décanteur, d'un filtre ou d'un bassin de contact à partir du débit et du temps de séjour."),
   component: Sizing,
 });

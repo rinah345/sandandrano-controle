@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { Card, PageHeader } from "@/components/calc";
 import { pageHead } from "@/lib/head";
 
-export const Route = createFileRoute("/manuel")({
+export const Route = createFileRoute("/_authenticated/manuel")({
   head: () => pageHead("Manuel technique", "Formules de dosage, définitions, conversions d'unités, exemples résolus et recommandations pour les stations de traitement d'eau."),
   component: Manuel,
 });

@@ -9,34 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as AnalyseRouteImport } from './routes/analyse'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as ChlorationRouteImport } from './routes/chloration'
-import { Route as ChloreRouteImport } from './routes/chlore'
-import { Route as DilutionRouteImport } from './routes/dilution'
-import { Route as DimensionnementRouteImport } from './routes/dimensionnement'
-import { Route as HistoriqueRouteImport } from './routes/historique'
-import { Route as JarTestRouteImport } from './routes/jar-test'
-import { Route as ManuelRouteImport } from './routes/manuel'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as StockRouteImport } from './routes/stock'
-import { Route as SulfateRouteImport } from './routes/sulfate'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAnalyseRouteImport } from './routes/_authenticated/analyse'
+import { Route as AuthenticatedChlorationRouteImport } from './routes/_authenticated/chloration'
+import { Route as AuthenticatedChloreRouteImport } from './routes/_authenticated/chlore'
+import { Route as AuthenticatedDilutionRouteImport } from './routes/_authenticated/dilution'
+import { Route as AuthenticatedDimensionnementRouteImport } from './routes/_authenticated/dimensionnement'
+import { Route as AuthenticatedHistoriqueRouteImport } from './routes/_authenticated/historique'
+import { Route as AuthenticatedJarTestRouteImport } from './routes/_authenticated/jar-test'
+import { Route as AuthenticatedManuelRouteImport } from './routes/_authenticated/manuel'
+import { Route as AuthenticatedStockRouteImport } from './routes/_authenticated/stock'
+import { Route as AuthenticatedSulfateRouteImport } from './routes/_authenticated/sulfate'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AnalyseRoute = AnalyseRouteImport.update({
-  id: '/analyse',
-  path: '/analyse',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -44,113 +34,131 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ChlorationRoute = ChlorationRouteImport.update({
-  id: '/chloration',
-  path: '/chloration',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChloreRoute = ChloreRouteImport.update({
-  id: '/chlore',
-  path: '/chlore',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DilutionRoute = DilutionRouteImport.update({
-  id: '/dilution',
-  path: '/dilution',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DimensionnementRoute = DimensionnementRouteImport.update({
-  id: '/dimensionnement',
-  path: '/dimensionnement',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HistoriqueRoute = HistoriqueRouteImport.update({
-  id: '/historique',
-  path: '/historique',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const JarTestRoute = JarTestRouteImport.update({
-  id: '/jar-test',
-  path: '/jar-test',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ManuelRoute = ManuelRouteImport.update({
-  id: '/manuel',
-  path: '/manuel',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StockRoute = StockRouteImport.update({
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAnalyseRoute = AuthenticatedAnalyseRouteImport.update({
+  id: '/analyse',
+  path: '/analyse',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedChlorationRoute = AuthenticatedChlorationRouteImport.update({
+  id: '/chloration',
+  path: '/chloration',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedChloreRoute = AuthenticatedChloreRouteImport.update({
+  id: '/chlore',
+  path: '/chlore',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDilutionRoute = AuthenticatedDilutionRouteImport.update({
+  id: '/dilution',
+  path: '/dilution',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDimensionnementRoute =
+  AuthenticatedDimensionnementRouteImport.update({
+    id: '/dimensionnement',
+    path: '/dimensionnement',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedHistoriqueRoute = AuthenticatedHistoriqueRouteImport.update({
+  id: '/historique',
+  path: '/historique',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedJarTestRoute = AuthenticatedJarTestRouteImport.update({
+  id: '/jar-test',
+  path: '/jar-test',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedManuelRoute = AuthenticatedManuelRouteImport.update({
+  id: '/manuel',
+  path: '/manuel',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStockRoute = AuthenticatedStockRouteImport.update({
   id: '/stock',
   path: '/stock',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const SulfateRoute = SulfateRouteImport.update({
+const AuthenticatedSulfateRoute = AuthenticatedSulfateRouteImport.update({
   id: '/sulfate',
   path: '/sulfate',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/analyse': typeof AnalyseRoute
+  '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
-  '/chloration': typeof ChlorationRoute
-  '/chlore': typeof ChloreRoute
-  '/dilution': typeof DilutionRoute
-  '/dimensionnement': typeof DimensionnementRoute
-  '/historique': typeof HistoriqueRoute
-  '/jar-test': typeof JarTestRoute
-  '/manuel': typeof ManuelRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/stock': typeof StockRoute
-  '/sulfate': typeof SulfateRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/analyse': typeof AuthenticatedAnalyseRoute
+  '/chloration': typeof AuthenticatedChlorationRoute
+  '/chlore': typeof AuthenticatedChloreRoute
+  '/dilution': typeof AuthenticatedDilutionRoute
+  '/dimensionnement': typeof AuthenticatedDimensionnementRoute
+  '/historique': typeof AuthenticatedHistoriqueRoute
+  '/jar-test': typeof AuthenticatedJarTestRoute
+  '/manuel': typeof AuthenticatedManuelRoute
+  '/stock': typeof AuthenticatedStockRoute
+  '/sulfate': typeof AuthenticatedSulfateRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/analyse': typeof AnalyseRoute
   '/auth': typeof AuthRoute
-  '/chloration': typeof ChlorationRoute
-  '/chlore': typeof ChloreRoute
-  '/dilution': typeof DilutionRoute
-  '/dimensionnement': typeof DimensionnementRoute
-  '/historique': typeof HistoriqueRoute
-  '/jar-test': typeof JarTestRoute
-  '/manuel': typeof ManuelRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/stock': typeof StockRoute
-  '/sulfate': typeof SulfateRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/analyse': typeof AuthenticatedAnalyseRoute
+  '/chloration': typeof AuthenticatedChlorationRoute
+  '/chlore': typeof AuthenticatedChloreRoute
+  '/dilution': typeof AuthenticatedDilutionRoute
+  '/dimensionnement': typeof AuthenticatedDimensionnementRoute
+  '/historique': typeof AuthenticatedHistoriqueRoute
+  '/jar-test': typeof AuthenticatedJarTestRoute
+  '/manuel': typeof AuthenticatedManuelRoute
+  '/stock': typeof AuthenticatedStockRoute
+  '/sulfate': typeof AuthenticatedSulfateRoute
+  '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/analyse': typeof AnalyseRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/chloration': typeof ChlorationRoute
-  '/chlore': typeof ChloreRoute
-  '/dilution': typeof DilutionRoute
-  '/dimensionnement': typeof DimensionnementRoute
-  '/historique': typeof HistoriqueRoute
-  '/jar-test': typeof JarTestRoute
-  '/manuel': typeof ManuelRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/stock': typeof StockRoute
-  '/sulfate': typeof SulfateRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/analyse': typeof AuthenticatedAnalyseRoute
+  '/_authenticated/chloration': typeof AuthenticatedChlorationRoute
+  '/_authenticated/chlore': typeof AuthenticatedChloreRoute
+  '/_authenticated/dilution': typeof AuthenticatedDilutionRoute
+  '/_authenticated/dimensionnement': typeof AuthenticatedDimensionnementRoute
+  '/_authenticated/historique': typeof AuthenticatedHistoriqueRoute
+  '/_authenticated/jar-test': typeof AuthenticatedJarTestRoute
+  '/_authenticated/manuel': typeof AuthenticatedManuelRoute
+  '/_authenticated/stock': typeof AuthenticatedStockRoute
+  '/_authenticated/sulfate': typeof AuthenticatedSulfateRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
+    | '/reset-password'
     | '/admin'
     | '/analyse'
-    | '/auth'
     | '/chloration'
     | '/chlore'
     | '/dilution'
@@ -158,15 +166,14 @@ export interface FileRouteTypes {
     | '/historique'
     | '/jar-test'
     | '/manuel'
-    | '/reset-password'
     | '/stock'
     | '/sulfate'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
+    | '/auth'
+    | '/reset-password'
     | '/admin'
     | '/analyse'
-    | '/auth'
     | '/chloration'
     | '/chlore'
     | '/dilution'
@@ -174,65 +181,41 @@ export interface FileRouteTypes {
     | '/historique'
     | '/jar-test'
     | '/manuel'
-    | '/reset-password'
     | '/stock'
     | '/sulfate'
+    | '/'
   id:
     | '__root__'
-    | '/'
-    | '/admin'
-    | '/analyse'
+    | '/_authenticated'
     | '/auth'
-    | '/chloration'
-    | '/chlore'
-    | '/dilution'
-    | '/dimensionnement'
-    | '/historique'
-    | '/jar-test'
-    | '/manuel'
     | '/reset-password'
-    | '/stock'
-    | '/sulfate'
+    | '/_authenticated/admin'
+    | '/_authenticated/analyse'
+    | '/_authenticated/chloration'
+    | '/_authenticated/chlore'
+    | '/_authenticated/dilution'
+    | '/_authenticated/dimensionnement'
+    | '/_authenticated/historique'
+    | '/_authenticated/jar-test'
+    | '/_authenticated/manuel'
+    | '/_authenticated/stock'
+    | '/_authenticated/sulfate'
+    | '/_authenticated/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
-  AnalyseRoute: typeof AnalyseRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  ChlorationRoute: typeof ChlorationRoute
-  ChloreRoute: typeof ChloreRoute
-  DilutionRoute: typeof DilutionRoute
-  DimensionnementRoute: typeof DimensionnementRoute
-  HistoriqueRoute: typeof HistoriqueRoute
-  JarTestRoute: typeof JarTestRoute
-  ManuelRoute: typeof ManuelRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  StockRoute: typeof StockRoute
-  SulfateRoute: typeof SulfateRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/analyse': {
-      id: '/analyse'
-      path: '/analyse'
-      fullPath: '/analyse'
-      preLoaderRoute: typeof AnalyseRouteImport
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -242,55 +225,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/chloration': {
-      id: '/chloration'
-      path: '/chloration'
-      fullPath: '/chloration'
-      preLoaderRoute: typeof ChlorationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/chlore': {
-      id: '/chlore'
-      path: '/chlore'
-      fullPath: '/chlore'
-      preLoaderRoute: typeof ChloreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dilution': {
-      id: '/dilution'
-      path: '/dilution'
-      fullPath: '/dilution'
-      preLoaderRoute: typeof DilutionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dimensionnement': {
-      id: '/dimensionnement'
-      path: '/dimensionnement'
-      fullPath: '/dimensionnement'
-      preLoaderRoute: typeof DimensionnementRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/historique': {
-      id: '/historique'
-      path: '/historique'
-      fullPath: '/historique'
-      preLoaderRoute: typeof HistoriqueRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/jar-test': {
-      id: '/jar-test'
-      path: '/jar-test'
-      fullPath: '/jar-test'
-      preLoaderRoute: typeof JarTestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/manuel': {
-      id: '/manuel'
-      path: '/manuel'
-      fullPath: '/manuel'
-      preLoaderRoute: typeof ManuelRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -298,38 +232,130 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/stock': {
-      id: '/stock'
+    '/_authenticated/': {
+      id: '/_authenticated/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/analyse': {
+      id: '/_authenticated/analyse'
+      path: '/analyse'
+      fullPath: '/analyse'
+      preLoaderRoute: typeof AuthenticatedAnalyseRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/chloration': {
+      id: '/_authenticated/chloration'
+      path: '/chloration'
+      fullPath: '/chloration'
+      preLoaderRoute: typeof AuthenticatedChlorationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/chlore': {
+      id: '/_authenticated/chlore'
+      path: '/chlore'
+      fullPath: '/chlore'
+      preLoaderRoute: typeof AuthenticatedChloreRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dilution': {
+      id: '/_authenticated/dilution'
+      path: '/dilution'
+      fullPath: '/dilution'
+      preLoaderRoute: typeof AuthenticatedDilutionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dimensionnement': {
+      id: '/_authenticated/dimensionnement'
+      path: '/dimensionnement'
+      fullPath: '/dimensionnement'
+      preLoaderRoute: typeof AuthenticatedDimensionnementRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/historique': {
+      id: '/_authenticated/historique'
+      path: '/historique'
+      fullPath: '/historique'
+      preLoaderRoute: typeof AuthenticatedHistoriqueRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/jar-test': {
+      id: '/_authenticated/jar-test'
+      path: '/jar-test'
+      fullPath: '/jar-test'
+      preLoaderRoute: typeof AuthenticatedJarTestRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/manuel': {
+      id: '/_authenticated/manuel'
+      path: '/manuel'
+      fullPath: '/manuel'
+      preLoaderRoute: typeof AuthenticatedManuelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/stock': {
+      id: '/_authenticated/stock'
       path: '/stock'
       fullPath: '/stock'
-      preLoaderRoute: typeof StockRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedStockRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/sulfate': {
-      id: '/sulfate'
+    '/_authenticated/sulfate': {
+      id: '/_authenticated/sulfate'
       path: '/sulfate'
       fullPath: '/sulfate'
-      preLoaderRoute: typeof SulfateRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedSulfateRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAnalyseRoute: typeof AuthenticatedAnalyseRoute
+  AuthenticatedChlorationRoute: typeof AuthenticatedChlorationRoute
+  AuthenticatedChloreRoute: typeof AuthenticatedChloreRoute
+  AuthenticatedDilutionRoute: typeof AuthenticatedDilutionRoute
+  AuthenticatedDimensionnementRoute: typeof AuthenticatedDimensionnementRoute
+  AuthenticatedHistoriqueRoute: typeof AuthenticatedHistoriqueRoute
+  AuthenticatedJarTestRoute: typeof AuthenticatedJarTestRoute
+  AuthenticatedManuelRoute: typeof AuthenticatedManuelRoute
+  AuthenticatedStockRoute: typeof AuthenticatedStockRoute
+  AuthenticatedSulfateRoute: typeof AuthenticatedSulfateRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAnalyseRoute: AuthenticatedAnalyseRoute,
+  AuthenticatedChlorationRoute: AuthenticatedChlorationRoute,
+  AuthenticatedChloreRoute: AuthenticatedChloreRoute,
+  AuthenticatedDilutionRoute: AuthenticatedDilutionRoute,
+  AuthenticatedDimensionnementRoute: AuthenticatedDimensionnementRoute,
+  AuthenticatedHistoriqueRoute: AuthenticatedHistoriqueRoute,
+  AuthenticatedJarTestRoute: AuthenticatedJarTestRoute,
+  AuthenticatedManuelRoute: AuthenticatedManuelRoute,
+  AuthenticatedStockRoute: AuthenticatedStockRoute,
+  AuthenticatedSulfateRoute: AuthenticatedSulfateRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
-  AnalyseRoute: AnalyseRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  ChlorationRoute: ChlorationRoute,
-  ChloreRoute: ChloreRoute,
-  DilutionRoute: DilutionRoute,
-  DimensionnementRoute: DimensionnementRoute,
-  HistoriqueRoute: HistoriqueRoute,
-  JarTestRoute: JarTestRoute,
-  ManuelRoute: ManuelRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  StockRoute: StockRoute,
-  SulfateRoute: SulfateRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

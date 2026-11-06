@@ -10,5 +10,5 @@
 - [x] Tests scientifiques et vérification des essais, graphiques et rapports
 - [x] Comptes utilisateurs e-mail uniquement et panneau d'administration
 - [x] Activer / bloquer, refus de connexion et interruption des sessions, historique réservé à l'administrateur
-- [ ] Exiger un compte approuvé pour toutes les pages et placer les nouveaux comptes en attente
-- [ ] Vérifier l’approbation, les refus d’accès et l’administration
+- [x] Exiger un compte approuvé pour toutes les pages et placer les nouveaux comptes en attente
+- [x] Vérifier l’approbation, les refus d’accès et l’administration

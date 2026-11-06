@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/calc";
 import { DosingCalculator } from "@/components/DosingCalculator";
 import { pageHead } from "@/lib/head";
 
-export const Route = createFileRoute("/sulfate")({
+export const Route = createFileRoute("/_authenticated/sulfate")({
   head: () => pageHead("Dosage du sulfate d'aluminium", "Calcul du débit d'injection du coagulant, de la masse de produit et de la préparation des cuves."),
   component: () => (
     <div className="mx-auto max-w-5xl px-6 py-10">

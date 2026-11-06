@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/calc";
 import { listAccounts, listAccessAudit, setAccountAccess } from "@/lib/access.functions";
 import { pageHead } from "@/lib/head";
-export const Route = createFileRoute("/admin")({ head: () => pageHead("Administration des comptes", "Gestion sécurisée des accès AquaDosage : activation, blocage des comptes et historique des modifications."), component: Admin });
+export const Route = createFileRoute("/_authenticated/admin")({ head: () => pageHead("Administration des comptes", "Gestion sécurisée des accès AquaDosage : activation, blocage des comptes et historique des modifications."), component: Admin });
 function Admin() {
   const account = useAccount();
   return <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6"><PageHeader title="Administration · comptes" subtitle="Autorisations d'accès et journal des modifications." />{account.checking ? <p>Vérification des droits…</p> : account.admin ? <AdminWorkspace /> : <div className="border-t py-6"><p className="mb-4 text-muted-foreground">Accès réservé à l'administrateur.</p><Button asChild><Link to="/auth">Connexion</Link></Button></div>}</main>;
@@ -28,8 +28,8 @@ function AdminWorkspace() {
       {accounts.data.users.length === 0 && <p className="text-muted-foreground">Aucun compte sur cette page.</p>}
       <div className="divide-y border-y">{accounts.data.users.map((user) => <div key={user.id} className="flex flex-wrap items-center justify-between gap-4 py-4">
         <div className="min-w-0 flex-1"><p className="break-all font-semibold">{user.email}</p><p className="mt-1 text-xs text-muted-foreground">Créé le {date(user.createdAt)} · {user.confirmed ? "E-mail confirmé" : "E-mail non confirmé"}</p></div>
-        <span className={`rounded-md border px-3 py-1 text-sm ${user.blocked ? "border-destructive/30 bg-destructive/10 text-destructive" : "border-ok/30 bg-ok/10 text-ok"}`}>{user.blocked ? "Bloqué" : "Actif"}</span>
-        {user.admin ? <span className="flex items-center gap-2 text-sm text-primary"><ShieldCheck size={16} />Administrateur</span> : <Button variant={user.blocked ? "outline" : "destructive"} disabled={pending !== null} onClick={() => { void modify(user.id, !user.blocked); }}>{user.blocked ? <UnlockKeyhole /> : <LockKeyhole />}{pending === user.id ? "En cours…" : user.blocked ? "Activer" : "Bloquer"}</Button>}
+        <span className={`rounded-md border px-3 py-1 text-sm ${user.blocked ? "border-destructive/30 bg-destructive/10 text-destructive" : user.approved ? "border-ok/30 bg-ok/10 text-ok" : "bg-muted text-muted-foreground"}`}>{user.blocked ? "Bloqué" : user.approved ? "Actif" : "En attente d’approbation"}</span>
+        {user.admin ? <span className="flex items-center gap-2 text-sm text-primary"><ShieldCheck size={16} />Administrateur</span> : <Button variant={user.blocked || !user.approved ? "outline" : "destructive"} disabled={pending !== null || (!user.confirmed && !user.approved)} onClick={() => { void modify(user.id, user.approved && !user.blocked); }}>{user.blocked || !user.approved ? <UnlockKeyhole /> : <LockKeyhole />}{pending === user.id ? "En cours…" : !user.approved ? "Approuver" : user.blocked ? "Activer" : "Bloquer"}</Button>}
       </div>)}</div>
       <div className="flex items-center justify-end gap-3"><Button size="icon" variant="outline" aria-label="Comptes précédents" disabled={page === 1} onClick={() => setPage(page - 1)}><ChevronLeft /></Button><span className="text-sm">Page {page}</span><Button size="icon" variant="outline" aria-label="Comptes suivants" disabled={!accounts.data.hasNext} onClick={() => setPage(page + 1)}><ChevronRight /></Button></div>
     </>}

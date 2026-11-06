@@ -6,19 +6,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { getAccountStatus } from "@/lib/access.functions";
 import { Button } from "@/components/ui/button";
 import { LogOut, ShieldCheck, UserRound } from "lucide-react";
-type Account = { signedIn: boolean; admin: boolean; checking: boolean; signOut: () => Promise<void> };
-const AccountContext = createContext<Account>({ signedIn: false, admin: false, checking: true, signOut: async () => {} });
+type Account = { signedIn: boolean; allowed: boolean; admin: boolean; checking: boolean; signOut: () => Promise<void> };
+const AccountContext = createContext<Account>({ signedIn: false, allowed: false, admin: false, checking: true, signOut: async () => {} });
 export const useAccount = () => useContext(AccountContext);
 export function AccountSession({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const statusFn = useServerFn(getAccountStatus);
-  const [state, setState] = useState({ signedIn: false, admin: false, checking: true });
+  const [state, setState] = useState({ signedIn: false, allowed: false, admin: false, checking: true });
   const [failure, setFailure] = useState(false);
   const signOut = async () => {
     await queryClient.cancelQueries(); queryClient.clear();
     await supabase.auth.signOut({ scope: "local" });
-    setState({ signedIn: false, admin: false, checking: false });
+    setState({ signedIn: false, allowed: false, admin: false, checking: false });
     await router.navigate({ to: "/auth", replace: true });
   };
   useEffect(() => {
@@ -30,11 +30,11 @@ export function AccountSession({ children }: { children: ReactNode }) {
       try {
         const { data } = await supabase.auth.getSession();
         if (!alive) return;
-        if (!data.session) { setState({ signedIn: false, admin: false, checking: false }); setFailure(false); return; }
+        if (!data.session) { setState({ signedIn: false, allowed: false, admin: false, checking: false }); setFailure(false); return; }
         const status = await statusFn();
         if (!alive) return;
-        if (!status.allowed) { await signOut(); return; }
-        setFailure(false); setState({ signedIn: true, admin: status.admin, checking: false });
+        if (status.blocked || (status.approved && !status.allowed)) { await signOut(); return; }
+        setFailure(false); setState({ signedIn: true, allowed: status.allowed, admin: status.admin, checking: false });
         if (!channel) {
           channel = supabase.channel(`account-access-${data.session.user.id}-${crypto.randomUUID()}`)
             .on("postgres_changes", { event: "UPDATE", schema: "public", table: "account_access", filter: `user_id=eq.${data.session.user.id}` }, () => { void check(); }).subscribe();
@@ -45,7 +45,7 @@ export function AccountSession({ children }: { children: ReactNode }) {
     const { data: listener } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
         if (channel) { void supabase.removeChannel(channel); channel = null; }
-        setState({ signedIn: false, admin: false, checking: false });
+        setState({ signedIn: false, allowed: false, admin: false, checking: false });
         void router.invalidate();
       } else if (["SIGNED_IN", "USER_UPDATED", "TOKEN_REFRESHED"].includes(event)) { setTimeout(() => { void check(); }, 0); }
     });
