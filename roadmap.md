@@ -12,3 +12,4 @@
 - [x] Activer / bloquer, refus de connexion et interruption des sessions, historique réservé à l'administrateur
 - [x] Exiger un compte approuvé pour toutes les pages et placer les nouveaux comptes en attente
 - [x] Vérifier l’approbation, les refus d’accès et l’administration
+- [ ] Dosage chlore : teneur active, préparation, quantités injectées et prévisions hebdomadaires vérifiées

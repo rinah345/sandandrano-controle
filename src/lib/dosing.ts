@@ -45,6 +45,7 @@ const show = (q: Q) => `${fmt(q.v as number)} ${q.u}`;
 export type DosingInput = {
   mode: "continu" | "lot";
   Cm: Q; // concentration solution mère
+  concentrationMode?: "direct" | "preparation";
   D: Q; // dose cible
   Qe?: Q; // débit eau
   Ve?: Q; // volume eau (lot)
@@ -54,7 +55,7 @@ export type DosingInput = {
   residual?: Q; // chlore résiduel mesuré
   demand?: Q; // demande en chlore estimée
   productMass?: Q; // sulfate : quantité de produit disponible
-  purity?: number | null; // sulfate : teneur en produit actif (%)
+  purity?: number | null; // teneur massique en produit actif (% m/m)
   tankV?: Q; // sulfate : volume cuve de préparation
   tankC?: Q; // sulfate : concentration souhaitée de la cuve
 };
@@ -70,7 +71,17 @@ export function computeDosing(kind: "chlore" | "sulfate", inp: DosingInput): She
     "Mois = 30 jours ; semaine = 7 jours ; jour = 24 h de fonctionnement continu.",
   );
 
-  let ok = req(s, inp.Cm, "Concentration de la solution mère");
+  const prepared = kind === "chlore" && inp.concentrationMode === "preparation";
+  let ok = prepared
+    ? req(s, inp.productMass, "Masse de produit pour la préparation")
+    : req(s, inp.Cm, "Concentration de la solution mère");
+  if (prepared) {
+    ok = req(s, inp.tankV, "Volume final de la solution préparée") && ok;
+    if (inp.purity === null || inp.purity === undefined) {
+      s.checks.push({ level: "error", msg: "Teneur en chlore actif : champ obligatoire pour la préparation." });
+      ok = false;
+    }
+  }
   ok = req(s, inp.D, "Dose cible") && ok;
   if (inp.mode === "continu") ok = req(s, inp.Qe, "Débit d'eau à traiter") && ok;
   else ok = req(s, inp.Ve, "Volume d'eau à traiter") && ok;
@@ -81,19 +92,32 @@ export function computeDosing(kind: "chlore" | "sulfate", inp: DosingInput): She
   const hasDem = opt(s, inp.demand, "Demande en chlore");
   const hasMass = opt(s, inp.productMass, "Quantité de produit disponible");
   const purity = inp.purity ?? null;
-  if (purity !== null && (Number.isNaN(purity) || purity <= 0 || purity > 100)) {
+  if (purity !== null && (!Number.isFinite(purity) || purity <= 0 || purity > 100)) {
     s.checks.push({ level: "error", msg: "Teneur en produit actif : doit être comprise entre 0 et 100 %." });
     ok = false;
   }
   const hasTank = opt(s, inp.tankV, "Volume de la cuve") && opt(s, inp.tankC, "Concentration souhaitée de la cuve");
   if (!ok) return s;
 
-  const Cm = base(inp.Cm, CONC);
+  const pf = purity !== null ? purity / 100 : 1;
+  const Cm = prepared && inp.productMass && inp.tankV
+    ? base(inp.productMass, MASS) * pf / base(inp.tankV, VOL)
+    : base(inp.Cm, CONC);
   const D = base(inp.D, CONC);
   s.inputs.push({ label: "Mode", value: inp.mode === "continu" ? "A — Traitement en continu" : "B — Traitement par lot" });
-  s.inputs.push({ label: "Concentration solution mère Cm", value: show(inp.Cm) });
+  s.inputs.push({ label: "Concentration solution mère Cm", value: prepared ? `${fmt(Cm)} mg/L (calculée)` : show(inp.Cm) });
   s.inputs.push({ label: "Dose cible D", value: show(inp.D) });
-  s.conversions.push({ label: "Cm", value: `${show(inp.Cm)} → ${fmt(Cm)} mg/L` });
+  s.conversions.push({ label: "Cm", value: prepared ? `${fmt(Cm)} mg/L = ${fmt(Cm / 1000)} g/L = ${fmt(Cm / 10000)} % (m/v)` : `${show(inp.Cm)} → ${fmt(Cm)} mg/L` });
+  if (kind === "chlore" && purity !== null) {
+    s.inputs.push({ label: "Teneur du produit en chlore actif (% m/m)", value: `${fmt(purity)} %` });
+    s.hypotheses.push("La teneur % (m/m) est la fraction massique de chlore disponible, équivalent Cl₂, du produit commercial ; elle n'est pas une concentration % (m/v). La concentration Cm est déjà exprimée en chlore actif : ne pas lui appliquer la teneur une seconde fois.");
+  }
+  if (prepared && inp.productMass && inp.tankV) {
+    s.inputs.push({ label: "Masse de produit pour la préparation", value: show(inp.productMass) }, { label: "Volume final de solution préparée", value: show(inp.tankV) });
+    s.steps.push({ label: "Concentration en chlore actif de la préparation", formula: "Cm = m_produit × (teneur / 100) / V_final", substitution: `${fmt(base(inp.productMass, MASS))} mg × ${fmt(pf)} / ${fmt(base(inp.tankV, VOL))} L`, result: `${fmt(Cm)} mg/L` });
+    s.results.push({ label: "Masse de chlore actif dans la préparation", value: `${fmt(base(inp.productMass, MASS) * pf / 1000)} g` });
+    s.limits.push("Utiliser la teneur en chlore disponible de la fiche produit ou d'une analyse récente, pas le pourcentage de NaOCl. Dissoudre puis compléter jusqu'au volume final indiqué. Pour un produit liquide dosé en volume, sa densité est nécessaire pour convertir ce volume en masse.");
+  }
   s.conversions.push({ label: "D", value: `${show(inp.D)} → ${fmt(D)} mg/L` });
 
   if (Cm <= D) {
@@ -103,8 +127,6 @@ export function computeDosing(kind: "chlore" | "sulfate", inp: DosingInput): She
   if (kind === "chlore" && D > 10) s.checks.push({ level: "warn", msg: `Dose de ${fmt(D)} mg/L inhabituellement élevée pour une chloration en continu (sauf désinfection de choc). Vérifiez la saisie.` });
   if (kind === "sulfate" && (D < 1 || D > 200)) s.checks.push({ level: "warn", msg: `Dose de ${fmt(D)} mg/L inhabituelle pour un coagulant. Confirmez par jar-test.` });
   if (kind === "chlore" && Cm > 200000) s.checks.push({ level: "warn", msg: "Concentration de solution mère > 200 g/L : valeur inhabituelle pour une solution chlorée, vérifiez l'unité." });
-
-  const pf = purity !== null ? purity / 100 : 1;
 
   if (inp.mode === "continu") {
     const Qe = base(inp.Qe!, FLOW);
@@ -129,15 +151,29 @@ export function computeDosing(kind: "chlore" | "sulfate", inp: DosingInput): She
       { label: "Solution mère / semaine", value: `${fmt(Lh * 24 * 7)} L` },
       { label: "Solution mère / mois (30 j)", value: `${fmt(Lh * 24 * 30)} L` },
       { label: `${kind === "chlore" ? "Chlore actif" : "Sulfate (pur)"} consommé / jour`, value: `${fmt(massDay / 1e6)} kg` },
+      ...(kind === "chlore" ? [
+        { label: "Chlore actif injecté / heure", value: `${fmt(massDay / 24 / 1000)} g` },
+        { label: "Chlore actif consommé / semaine (7 j)", value: `${fmt(massDay * 7 / 1e6)} kg` },
+        { label: "Eau traitée / jour (24 h)", value: `${fmt(Qe * 86400 / 1000)} m³` },
+        { label: "Eau traitée / semaine (7 j)", value: `${fmt(Qe * 86400 * 7 / 1000)} m³` },
+      ] : []),
       { label: `${kind === "chlore" ? "Chlore actif" : "Sulfate (pur)"} consommé / mois`, value: `${fmt((massDay * 30) / 1e6)} kg` },
     );
     if (purity !== null) s.forecast.push({ label: `Produit commercial (${fmt(purity)} %) / jour`, value: `${fmt(massDay / pf / 1e6)} kg` });
+    if (kind === "chlore" && purity !== null) s.forecast.push(
+      { label: "Produit commercial / semaine (7 j)", value: `${fmt(massDay * 7 / pf / 1e6)} kg` },
+      { label: "Produit commercial / mois (30 j)", value: `${fmt(massDay * 30 / pf / 1e6)} kg` },
+    );
     if (hasT) {
       const th = base(inp.t!, TIME);
       const V = Lh * th;
       s.steps.push({ label: "Consommation sur la durée", formula: "V = Qi × t", substitution: `${fmt(Lh)} L/h × ${fmt(th)} h`, result: `${fmt(V)} L` });
       s.results.push({ label: `Volume consommé sur ${show(inp.t!)}`, value: `${fmt(V)} L` });
       s.results.push({ label: `Eau traitée sur ${show(inp.t!)}`, value: `${fmt((Qe * 3600 * th) / 1000)} m³` });
+      if (kind === "chlore") {
+        s.results.push({ label: "Chlore actif injecté sur la durée", value: `${fmt(V * Cm / 1000)} g` });
+        if (purity !== null) s.results.push({ label: "Produit commercial nécessaire sur la durée", value: `${fmt(V * Cm / pf / 1000)} g` });
+      }
     }
     if (hasStock) {
       const st = base(inp.stock!, VOL);
@@ -145,6 +181,9 @@ export function computeDosing(kind: "chlore" | "sulfate", inp: DosingInput): She
       s.steps.push({ label: "Autonomie du stock", formula: "T = V_stock / Qi", substitution: `${fmt(st)} L / ${fmt(Lh)} L/h`, result: `${fmt(auto)} h` });
       s.results.push({ label: "Autonomie du stock", value: `${fmt(auto)} h  (${fmt(auto / 24)} jours)` });
       s.results.push({ label: "Volume d'eau traitable avec le stock", value: `${fmt((st * Cm) / D / 1000)} m³` });
+      if (kind === "chlore") {
+        s.results.push({ label: "Stock de solution restant après 7 jours", value: `${fmt(Math.max(st - Lh * 168, 0))} L` }, { label: "Solution supplémentaire pour 7 jours", value: `${fmt(Math.max(Lh * 168 - st, 0))} L` });
+      }
     }
     if (hasPump) {
       const P = base(inp.pump!, INJ);
@@ -160,12 +199,17 @@ export function computeDosing(kind: "chlore" | "sulfate", inp: DosingInput): She
       );
       if (Math.abs(dRel) > 10) s.checks.push({ level: "warn", msg: `La pompe s'écarte de ${fmt(dRel, 3)} % du débit requis : réglez la pompe à ${fmt(Qi * 1000)} mL/s.` });
       else s.checks.push({ level: "ok", msg: "Débit de la pompe conforme au débit requis (écart ≤ 10 %)." });
+      if (kind === "chlore") s.forecast.push(
+        { label: "Solution injectée au débit réel pompe / semaine", value: `${fmt(P * 3600 * 168)} L` },
+        { label: "Chlore actif au débit réel pompe / semaine", value: `${fmt(P * Cm * 3600 * 168 / 1e6)} kg` },
+      );
     }
     s.interpretation.push(`Pour appliquer ${fmt(D)} mg/L sur un débit de ${fmt(Qe)} L/s avec une solution à ${fmt(Cm)} mg/L, la pompe doseuse doit injecter ${fmt(Qi * 1000)} mL/s, soit ${fmt(Lh)} L/h.`);
   } else {
-    const Ve = base(inp.Ve!, VOL);
-    s.inputs.push({ label: "Volume d'eau Ve", value: show(inp.Ve!) });
-    s.conversions.push({ label: "Ve", value: `${show(inp.Ve!)} → ${fmt(Ve)} L` });
+    if (!inp.Ve) return s;
+    const Ve = base(inp.Ve, VOL);
+    s.inputs.push({ label: "Volume d'eau Ve", value: show(inp.Ve) });
+    s.conversions.push({ label: "Ve", value: `${show(inp.Ve)} → ${fmt(Ve)} L` });
     const Vi = (D * Ve) / Cm;
     s.steps.push({ label: "Volume de solution mère", formula: "Vi = D × Ve / Cm", substitution: `Vi = ${fmt(D)} × ${fmt(Ve)} / ${fmt(Cm)}`, result: `${fmt(Vi)} L` });
     const m = D * Ve; // mg
@@ -442,6 +486,8 @@ export const EQUATIONS: Equation[] = [
   equation("capacite", "dosage", "Produit commercial et eau traitable", "m × teneur / 100 = D × Ve", [mass, purityVar, dose, waterVolume], [term(0.01, { m: 1, p: 1 }), term(-1, { D: 1, Ve: 1 })], { m: 50000000, p: 80, D: 40, Ve: 1000000 }),
   equation("autonomieProduit", "dosage", "Autonomie du produit commercial", "m × teneur / 100 = D × Qe × 3 600 × t", [mass, purityVar, dose, waterFlow, duration], [term(0.01, { m: 1, p: 1 }), term(-3600, { D: 1, Qe: 1, t: 1 })], { m: 12600000, p: 80, D: 10, Qe: 3.5, t: 80 }),
   equation("residuel", "chlore", "Dose, demande et résiduel théorique", "D = demande + résiduel", [dose, variable("dem", "Demande en chlore", CONC, { zero: true }), variable("res", "Chlore résiduel théorique", CONC, { zero: true })], [term(1, { D: 1 }), term(-1, { dem: 1 }), term(-1, { res: 1 })], { D: 2, dem: 1.5, res: 0.5 }),
+  equation("chloreTeneurContinu", "chlore", "Chlore : teneur, préparation et débit injecté", "Qi × m × teneur / 100 = D × Qe × V_final", [injection, mass, purityVar, dose, waterFlow, volume], [term(0.01, { Qi: 1, m: 1, p: 1 }), term(-1, { D: 1, Qe: 1, V: 1 })], { Qi: 0.001, m: 1000000, p: 70, D: 2, Qe: 3.5, V: 100 }),
+  equation("chloreTeneurLot", "chlore", "Chlore : teneur, préparation et volume injecté", "Vi × m × teneur / 100 = D × Ve × V_final", [injectedVolume, mass, purityVar, dose, waterVolume, volume], [term(0.01, { Vi: 1, m: 1, p: 1 }), term(-1, { D: 1, Ve: 1, V: 1 })], { Vi: 2, m: 1000000, p: 70, D: 2, Ve: 7000, V: 100 }),
   equation("preparation", "dilution", "Préparation / cuve de solution mère", "m × teneur / 100 = C × V", [mass, concentration, volume, purityVar], [term(0.01, { m: 1, p: 1 }), term(-1, { C: 1, V: 1 })], { m: 125000000, C: 100000, V: 1000, p: 80 }),
   equation("titre", "dilution", "Masse active et teneur commerciale", "m_act = m × teneur / 100", [variable("ma", "Masse de substance active", MASS), mass, purityVar], [term(1, { ma: 1 }), term(-0.01, { m: 1, p: 1 })], { ma: 100000000, m: 125000000, p: 80 }),
   equation("dilution", "dilution", "Dilution C1V1 = C2V2", "C1 × V1 = C2 × V2", [variable("V1", "Volume prélevé de solution concentrée (V1)", VOL), variable("C1", "Concentration initiale (C1)", CONC), variable("C2", "Concentration finale (C2)", CONC), variable("V2", "Volume final (V2)", VOL)], [term(1, { C1: 1, V1: 1 }), term(-1, { C2: 1, V2: 1 })], { C1: 120000, C2: 10000, V1: 10, V2: 120 }),
